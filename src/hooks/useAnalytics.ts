@@ -17,11 +17,11 @@ export function useAnalytics() {
         body: JSON.stringify({
           type: "pageview",
           path: pathname,
-          userId: session?.user?.id || null,
+          userId: (session?.user as any)?.id || null,
         }),
       }).catch(err => console.error("Analytics tracking failed:", err));
     }
-  }, [pathname, session?.user?.id]);
+  }, [pathname, (session?.user as any)?.id]);
 
   const trackAction = (action: string, element?: string) => {
     if (typeof window !== "undefined") {
@@ -33,7 +33,7 @@ export function useAnalytics() {
           action,
           element,
           path: pathname,
-          userId: session?.user?.id || null,
+          userId: (session?.user as any)?.id || null,
         }),
       }).catch(err => console.error("Analytics tracking failed:", err));
     }

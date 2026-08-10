@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Store, CreditCard, Save, MapPin, Truck, Bell, Gift, Megaphone } from "lucide-react";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 export default function SettingsClient() {
   const [activeTab, setActiveTab] = useState("general");
@@ -39,13 +40,69 @@ export default function SettingsClient() {
   const [fbPixelId, setFbPixelId] = useState("");
   const [tiktokPixelId, setTiktokPixelId] = useState("");
 
-  const handleSave = () => {
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.storeName) setStoreName(data.storeName);
+        if (data.contactEmail) setContactEmail(data.contactEmail);
+        if (data.hotline) setHotline(data.hotline);
+        if (data.address) setAddress(data.address);
+        if (data.description) setDescription(data.description);
+        
+        if (data.enableCOD !== undefined) setEnableCOD(data.enableCOD === "true");
+        if (data.enableSePay !== undefined) setEnableSePay(data.enableSePay === "true");
+        if (data.sepayApiKey) setSepayApiKey(data.sepayApiKey);
+        if (data.sepayAccountNumber) setSepayAccountNumber(data.sepayAccountNumber);
+        
+        if (data.notifyNewOrder !== undefined) setNotifyNewOrder(data.notifyNewOrder === "true");
+        if (data.notifyLowStock !== undefined) setNotifyLowStock(data.notifyLowStock === "true");
+        
+        if (data.baseShippingFee) setShippingFlatRate(data.baseShippingFee);
+        if (data.freeShippingThreshold) setFreeShippingThreshold(data.freeShippingThreshold);
+        
+        if (data.loyaltyEarnRate) setLoyaltyEarnRate(data.loyaltyEarnRate);
+        if (data.loyaltySpendRate) setLoyaltySpendRate(data.loyaltySpendRate);
+        if (data.enableLoyalty !== undefined) setEnableLoyalty(data.enableLoyalty === "true");
+        
+        if (data.fbPixelId) setFbPixelId(data.fbPixelId);
+        if (data.tiktokPixelId) setTiktokPixelId(data.tiktokPixelId);
+      })
+      .catch(err => console.error("Error loading settings:", err));
+  }, []);
+
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
+    
+    const dataToSave = {
+      storeName, contactEmail, hotline, address, description,
+      enableCOD: String(enableCOD), enableSePay: String(enableSePay),
+      sepayApiKey, sepayAccountNumber,
+      notifyNewOrder: String(notifyNewOrder), notifyLowStock: String(notifyLowStock),
+      baseShippingFee: shippingFlatRate, freeShippingThreshold,
+      loyaltyEarnRate, loyaltySpendRate, enableLoyalty: String(enableLoyalty),
+      fbPixelId, tiktokPixelId
+    };
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataToSave)
+      });
+      
+      if (res.ok) {
+        setIsEditing(false);
+        toast.success("Đã lưu cấu hình thành công!");
+      } else {
+        toast.error("Không thể lưu cấu hình");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Đã xảy ra lỗi khi lưu");
+    } finally {
       setIsSaving(false);
-      setIsEditing(false);
-      toast.success("Đã lưu cấu hình thành công!");
-    }, 800);
+    }
   };
 
   const tabs = [

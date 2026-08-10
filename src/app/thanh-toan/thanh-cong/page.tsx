@@ -32,7 +32,7 @@ export default async function CheckoutSuccessPage({
     const accNo = process.env.SEPAY_ACCOUNT_NO || "0123456789";
     const amount = order.totalAmount;
     const des = `MANNA ${order.orderCode}`;
-    qrUrl = `https://qr.sepay.vn/img?acc=${bankId}-${accNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(des)}`;
+    qrUrl = `https://qr.sepay.vn/img?acc=${accNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(des)}`;
   }
 
   return (

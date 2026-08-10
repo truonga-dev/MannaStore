@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'page.widget.zalo.me',
       },
+      {
+        protocol: 'https',
+        hostname: 'qr.sepay.vn',
+      },
     ],
   },
 };

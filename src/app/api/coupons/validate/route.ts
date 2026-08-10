@@ -33,14 +33,14 @@ export async function POST(req: Request) {
     let calculatedDiscountAmount = 0;
     if (coupon.discountPercentage) {
       calculatedDiscountAmount = Math.floor(orderAmount * (coupon.discountPercentage / 100));
+      if (coupon.discountAmount && calculatedDiscountAmount > coupon.discountAmount) {
+        calculatedDiscountAmount = coupon.discountAmount;
+      }
     } else if (coupon.discountAmount) {
       calculatedDiscountAmount = coupon.discountAmount;
     }
 
-    // Don't discount more than the order amount
-    if (calculatedDiscountAmount > orderAmount) {
-      calculatedDiscountAmount = orderAmount;
-    }
+    // Discount cap is now handled directly in checkout page and order creation action
 
     return NextResponse.json({
       message: "Áp dụng mã thành công",

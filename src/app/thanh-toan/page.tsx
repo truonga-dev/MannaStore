@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createOrder } from "@/app/actions/order";
+import { getStoreSettings } from "@/app/actions/settings";
 import toast from "react-hot-toast";
 import { MapPin, Ticket, Coins, CreditCard, ChevronRight, CheckCircle2, Truck, MessageSquare, UserCheck } from "lucide-react";
 import Link from "next/link";
@@ -22,7 +23,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("SEPAY");
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercentage: number | null; discountAmount: number | null } | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
@@ -30,6 +31,7 @@ export default function CheckoutPage() {
   const [showTerms, setShowTerms] = useState(false);
   
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [placedOrderCode, setPlacedOrderCode] = useState("");
 
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -39,7 +41,8 @@ export default function CheckoutPage() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
-  const [shippingFee, setShippingFee] = useState(35000);
+  const [shippingFee, setShippingFee] = useState(30000);
+  const [settings, setSettings] = useState<any>(null);
 
   const { items, totalPrice, clearCart, updateQuantity, removeItem } = useCartStore();
   const router = useRouter();
@@ -49,6 +52,11 @@ export default function CheckoutPage() {
       .then(r => r.json())
       .then(data => setProvinces(data))
       .catch(console.error);
+      
+    getStoreSettings().then(data => {
+      setSettings(data);
+      setShippingFee(data.baseShippingFee);
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -60,19 +68,20 @@ export default function CheckoutPage() {
           .then(data => setDistricts(data.districts || []))
           .catch(console.error);
       }
-      if (selectedProvince.includes("Hà Nội") || selectedProvince.includes("Hồ Chí Minh")) {
-        setShippingFee(20000);
+      
+      let baseFee = settings?.baseShippingFee || 30000;
+      let currentTotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+      if (settings?.freeShippingThreshold > 0 && currentTotal >= settings.freeShippingThreshold) {
+        setShippingFee(0);
       } else {
-        setShippingFee(35000);
+        setShippingFee(baseFee);
       }
     } else {
       setDistricts([]);
       setWards([]);
-      setShippingFee(35000);
+      setShippingFee(settings?.baseShippingFee || 30000);
     }
-    setSelectedDistrict("");
-    setSelectedWard("");
-  }, [selectedProvince, provinces]);
+  }, [selectedProvince, provinces, settings, items]);
 
   useEffect(() => {
     if (selectedDistrict) {
@@ -86,21 +95,36 @@ export default function CheckoutPage() {
     } else {
       setWards([]);
     }
-    setSelectedWard("");
   }, [selectedDistrict, districts]);
 
   useEffect(() => {
     setMounted(true);
     fetch("/api/user/profile").then(r => r.json()).then(profileData => {
-      if (profileData?.user) setUserProfile(profileData.user);
+      if (profileData?.user) {
+        setUserProfile(profileData.user);
+        if (profileData.user.address) {
+          const parts = profileData.user.address.split(",").map((s: string) => s.trim());
+          if (parts.length >= 4) {
+            const province = parts[parts.length - 1];
+            const district = parts[parts.length - 2];
+            const ward = parts[parts.length - 3];
+            const street = parts.slice(0, parts.length - 3).join(", ");
+            
+            setSelectedProvince(province);
+            setSelectedDistrict(district);
+            setSelectedWard(ward);
+            setStreetAddress(street);
+          }
+        }
+      }
     }).catch(err => console.error(err));
   }, []);
 
   useEffect(() => {
-    if (mounted && items.length === 0) {
+    if (mounted && items.length === 0 && !isSuccess) {
       router.push("/gio-hang");
     }
-  }, [mounted, items.length, router]);
+  }, [mounted, items.length, isSuccess, router]);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -113,7 +137,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponCode, orderAmount: totalPrice() }),
+        body: JSON.stringify({ code: couponCode, orderAmount: totalPrice() + shippingFee }),
       });
 
       const data = await res.json();
@@ -171,6 +195,7 @@ export default function CheckoutPage() {
       });
 
       if (res.success && res.orderId) {
+        setIsSuccess(true);
         clearCart();
         // Redirect to the dedicated success page which handles QR codes and polling
         router.push(`/thanh-toan/thanh-cong?id=${res.orderId}`);
@@ -187,8 +212,25 @@ export default function CheckoutPage() {
 
   if (!mounted || items.length === 0) return null;
 
-  const couponDiscount = appliedCoupon?.discountAmount || 0;
   const subtotal = totalPrice();
+  
+  let couponDiscount = 0;
+  if (appliedCoupon) {
+    const discountableAmount = subtotal + shippingFee;
+    if (appliedCoupon.discountPercentage) {
+      couponDiscount = Math.floor(discountableAmount * (appliedCoupon.discountPercentage / 100));
+      if (appliedCoupon.discountAmount && couponDiscount > appliedCoupon.discountAmount) {
+        couponDiscount = appliedCoupon.discountAmount;
+      }
+    } else if (appliedCoupon.discountAmount) {
+      couponDiscount = appliedCoupon.discountAmount;
+    }
+    
+    if (couponDiscount > discountableAmount) {
+      couponDiscount = discountableAmount;
+    }
+  }
+
   const finalTotal = Math.max(0, subtotal + shippingFee - couponDiscount);
 
   return (
@@ -245,11 +287,11 @@ export default function CheckoutPage() {
                 <div className="md:col-span-2 space-y-1">
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Địa chỉ giao hàng</label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <select required value={selectedProvince} onChange={e => setSelectedProvince(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer">
+                    <select required value={selectedProvince} onChange={e => { setSelectedProvince(e.target.value); setSelectedDistrict(""); setSelectedWard(""); }} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer">
                       <option value="">Tỉnh/Thành phố</option>
                       {provinces.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
                     </select>
-                    <select required value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)} disabled={!selectedProvince} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
+                    <select required value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedWard(""); }} disabled={!selectedProvince} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
                       <option value="">Quận/Huyện</option>
                       {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
                     </select>
@@ -303,28 +345,32 @@ export default function CheckoutPage() {
               </div>
               
               <div className="space-y-4">
-                <label className={`relative flex items-start gap-4 p-5 rounded-2xl cursor-pointer transition-all border-2 ${paymentMethod === 'SEPAY' ? 'border-primary bg-primary/5' : 'border-transparent bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#202020]'}`}>
-                  <div className="flex items-center h-6">
-                    <input type="radio" name="paymentMethod" value="SEPAY" checked={paymentMethod === 'SEPAY'} onChange={() => setPaymentMethod('SEPAY')} className="w-5 h-5 text-primary bg-white border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-lg mb-1 flex items-center justify-between">
-                      Chuyển khoản Ngân Hàng
-                      {paymentMethod === 'SEPAY' && <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Khuyên dùng</span>}
+                {settings?.enableBankTransfer !== false && (
+                  <label className={`relative flex items-start gap-4 p-5 rounded-2xl cursor-pointer transition-all border-2 ${paymentMethod === 'SEPAY' ? 'border-primary bg-primary/5' : 'border-transparent bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#202020]'}`}>
+                    <div className="flex items-center h-6">
+                      <input type="radio" name="paymentMethod" value="SEPAY" checked={paymentMethod === 'SEPAY'} onChange={() => setPaymentMethod('SEPAY')} className="w-5 h-5 text-primary bg-white border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600" />
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Thanh toán thủ công qua chuyển khoản ngân hàng. Đơn hàng sẽ được xử lý sau khi nhận tiền.</p>
-                  </div>
-                </label>
+                    <div className="flex-1">
+                      <div className="font-bold text-lg mb-1 flex items-center justify-between">
+                        Chuyển khoản Ngân Hàng
+                        {paymentMethod === 'SEPAY' && <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Khuyên dùng</span>}
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Thanh toán thủ công qua chuyển khoản ngân hàng. Đơn hàng sẽ được xử lý sau khi nhận tiền.</p>
+                    </div>
+                  </label>
+                )}
 
-                <label className={`relative flex items-start gap-4 p-5 rounded-2xl cursor-pointer transition-all border-2 ${paymentMethod === 'COD' ? 'border-primary bg-primary/5' : 'border-transparent bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#202020]'}`}>
-                  <div className="flex items-center h-6">
-                    <input type="radio" name="paymentMethod" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="w-5 h-5 text-primary bg-white border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-lg mb-1">Thanh toán khi nhận hàng (COD)</div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Thanh toán bằng tiền mặt khi shipper giao hàng đến tận tay bạn.</p>
-                  </div>
-                </label>
+                {settings?.enableCod !== false && (
+                  <label className={`relative flex items-start gap-4 p-5 rounded-2xl cursor-pointer transition-all border-2 ${paymentMethod === 'COD' ? 'border-primary bg-primary/5' : 'border-transparent bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#202020]'}`}>
+                    <div className="flex items-center h-6">
+                      <input type="radio" name="paymentMethod" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="w-5 h-5 text-primary bg-white border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-lg mb-1">Thanh toán khi nhận hàng (COD)</div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Thanh toán bằng tiền mặt khi shipper giao hàng đến tận tay bạn.</p>
+                    </div>
+                  </label>
+                )}
               </div>
             </section>
           </div>

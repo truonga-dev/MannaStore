@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { z } from "zod";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { getStoreSettings } from "@/app/actions/settings";
 
 import { headers } from "next/headers";
 
@@ -72,14 +73,24 @@ export async function createOrder(orderData: any) {
     }
     // --------------------------------
 
+    const settings = await getStoreSettings();
+    let shippingFee = settings.baseShippingFee;
+    if (settings.freeShippingThreshold > 0 && subtotal >= settings.freeShippingThreshold) {
+      shippingFee = 0;
+    }
+
     let couponDiscountAmount = 0;
 
     if (data.couponCode) {
       const coupon = await prisma.coupon.findUnique({ where: { code: data.couponCode } });
       if (coupon && coupon.isActive && (!coupon.maxUses || coupon.currentUses < coupon.maxUses)) {
         if (!coupon.minOrderValue || subtotal >= coupon.minOrderValue) {
+          const discountableAmount = subtotal + shippingFee;
           if (coupon.discountPercentage) {
-            couponDiscountAmount = subtotal * (coupon.discountPercentage / 100);
+            couponDiscountAmount = Math.floor(discountableAmount * (coupon.discountPercentage / 100));
+            if (coupon.discountAmount && couponDiscountAmount > coupon.discountAmount) {
+              couponDiscountAmount = coupon.discountAmount;
+            }
           } else if (coupon.discountAmount) {
             couponDiscountAmount = coupon.discountAmount;
           }
@@ -96,9 +107,8 @@ export async function createOrder(orderData: any) {
       pointsDiscountAmount = data.pointsToUse * 1000;
     }
 
-    const shippingFee = data.shippingFee || 0;
     const totalDiscountAmount = couponDiscountAmount + pointsDiscountAmount;
-    const totalAmount = Math.max(0, subtotal - totalDiscountAmount) + shippingFee;
+    const totalAmount = Math.max(0, subtotal + shippingFee - totalDiscountAmount);
 
     // Unique order code: MN + YYMMDD + auto-increment count of that day
     const today = new Date();

@@ -36,8 +36,8 @@ export async function POST(request: Request) {
     }
 
     // 2. Extract orderCode from content
-    // Match MN followed by 4-8 uppercase letters/numbers
-    const match = content.match(/MN[A-Z0-9]{4,8}/i);
+    // Match MN followed by 4-15 uppercase letters/numbers
+    const match = content.match(/MN[A-Z0-9]{4,15}/i);
     if (!match) {
       return NextResponse.json({ message: "No order code found in content" });
     }

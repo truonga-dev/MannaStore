@@ -13,7 +13,8 @@ import {
   LogOut,
   FileText,
   ChevronRight,
-  BarChart2
+  BarChart2,
+  MessageSquare
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
@@ -33,6 +34,7 @@ const menuGroups = [
     items: [
       { label: "Khách hàng", href: "/admin/customers", icon: <Users size={18} />, allowedRoles: ["ADMIN", "STAFF"] },
       { label: "Đơn hàng", href: "/admin/orders", icon: <ShoppingBag size={18} />, allowedRoles: ["ADMIN", "STAFF"] },
+      { label: "Hộp thư góp ý", href: "/admin/messages", icon: <MessageSquare size={18} />, allowedRoles: ["ADMIN", "STAFF"] },
     ]
   },
   {

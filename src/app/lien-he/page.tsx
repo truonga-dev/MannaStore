@@ -1,12 +1,42 @@
-import { Metadata } from 'next';
-import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Liên Hệ | Manna Store',
-  description: 'Liên hệ với Manna Store. Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn.',
-};
+import { useState } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, Loader2 } from 'lucide-react';
+import { submitContactMessage } from '../actions/contact';
+import toast from 'react-hot-toast';
 
 export default function LienHePage() {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: 'Hỗ trợ đơn hàng',
+    message: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
+    setLoading(true);
+    const res = await submitContactMessage(formData);
+    setLoading(false);
+
+    if (res.success) {
+      toast.success("Gửi tin nhắn thành công! Chúng tôi sẽ phản hồi sớm nhất.");
+      setFormData({ ...formData, message: '' }); // keep name/email but clear message
+    } else {
+      toast.error(res.error || "Có lỗi xảy ra");
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F7F4] dark:bg-[#0C0C0C] py-16 px-4">
       <div className="max-w-5xl mx-auto">
@@ -80,15 +110,18 @@ export default function LienHePage() {
           {/* Contact Form (Right) */}
           <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Gửi Lời Nhắn</h2>
-            <form className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Họ và tên</label>
                   <input 
                     type="text" 
                     id="name" 
+                    value={formData.name}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white" 
                     placeholder="Tên của bạn"
+                    required
                   />
                 </div>
                 <div>
@@ -96,8 +129,11 @@ export default function LienHePage() {
                   <input 
                     type="email" 
                     id="email" 
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white" 
                     placeholder="example@email.com"
+                    required
                   />
                 </div>
               </div>
@@ -105,7 +141,9 @@ export default function LienHePage() {
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Chủ đề</label>
                 <select 
-                  id="subject" 
+                  id="subject"
+                  value={formData.subject}
+                  onChange={handleChange} 
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white"
                 >
                   <option>Hỗ trợ đơn hàng</option>
@@ -120,16 +158,24 @@ export default function LienHePage() {
                 <textarea 
                   id="message" 
                   rows={4}
+                  value={formData.message}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none dark:text-white" 
                   placeholder="Bạn cần chúng tôi giúp gì?"
+                  required
                 ></textarea>
               </div>
 
               <button 
-                type="button" 
-                className="w-full py-4 px-6 bg-[#0B1B3D] dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:bg-[#0B1B3D]/90 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                type="submit" 
+                disabled={loading}
+                className="w-full py-4 px-6 bg-[#0B1B3D] dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:bg-[#0B1B3D]/90 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                Gửi tin nhắn <Send className="w-4 h-4" />
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>Gửi tin nhắn <Send className="w-4 h-4" /></>
+                )}
               </button>
             </form>
           </div>
