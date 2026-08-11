@@ -60,14 +60,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function HomeClient({ products, banners, categories }: { products: ProductWithVariants[], banners: any[], categories: any[] }) {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [bannerDir, setBannerDir] = useState(1); // 1 = next, -1 = prev
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-
-  // Handle case where no banners exist
   const hasBanners = banners && banners.length > 0;
   const currentBannerData = hasBanners ? banners[currentBanner] : null;
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll(
+    hasBanners 
+      ? { target: heroRef, offset: ["start start", "end start"] } 
+      : undefined
+  );
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   // Auto-play
   useEffect(() => {
