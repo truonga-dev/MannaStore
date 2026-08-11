@@ -20,9 +20,12 @@ const getStatusBadge = (status: string) => {
 export default function OrderClient({ initialOrders }: { initialOrders: any[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [newStatus, setNewStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -58,19 +61,29 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này? Thao tác này không thể hoàn tác.")) return;
+  const handleDeleteOrder = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setIsDeleteModalOpen(true);
+  };
 
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    
+    setIsDeleting(true);
     try {
-      const res = await deleteOrder(orderId);
+      const res = await deleteOrder(orderToDelete);
       if (res.success) {
         toast.success("Xóa đơn hàng thành công");
-        setOrders(orders.filter(o => o.id !== orderId));
+        setOrders(orders.filter(o => o.id !== orderToDelete));
+        setIsDeleteModalOpen(false);
+        setOrderToDelete(null);
       } else {
         toast.error("Lỗi: " + res.error);
       }
     } catch (error) {
       toast.error("Đã xảy ra lỗi");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -231,6 +244,57 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#1E1E1E] border border-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-800">
+              <h2 className="font-semibold text-gray-100 flex items-center gap-2">
+                <Trash2 className="text-red-400" size={18} />
+                Xác nhận xóa
+              </h2>
+              <button 
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setOrderToDelete(null);
+                }} 
+                className="text-gray-500 hover:bg-gray-800 hover:text-white p-1 rounded-lg transition-colors"
+                disabled={isDeleting}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm font-medium text-gray-300">
+                Bạn có chắc chắn muốn xóa đơn hàng này? Thao tác này không thể hoàn tác và mọi dữ liệu liên quan sẽ bị xóa sạch.
+              </p>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setOrderToDelete(null);
+                  }}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-400 bg-[#2A2A2A] hover:bg-[#333] hover:text-white rounded-full transition-all disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteOrder}
+                  disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md disabled:opacity-50 disabled:hover:translate-y-0 transition-all"
+                >
+                  {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
