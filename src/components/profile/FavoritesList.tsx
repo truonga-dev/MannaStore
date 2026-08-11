@@ -38,7 +38,7 @@ export default function FavoritesList({ favorites }: { favorites: any[] }) {
             <Link href={`/san-pham/${fav.product.slug}`} className="block group-hover:text-primary transition-colors">
               <h3 className="font-serif font-bold text-lg text-gray-900 dark:text-white truncate">{fav.product.name}</h3>
             </Link>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{fav.product.description}</p>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{fav.product.description?.replace(/<[^>]*>?/gm, '')}</p>
           </div>
         </div>
       ))}
