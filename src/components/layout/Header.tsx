@@ -9,13 +9,46 @@ import { useAuthSession } from '@/components/auth/Providers';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+import { useDebounce } from '@/hooks/useDebounce';
+import { Loader2 } from 'lucide-react';
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
   const { data: session } = useAuthSession();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchSearchResults() {
+      if (!debouncedSearchQuery.trim()) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch search results', error);
+      } finally {
+        setIsSearching(false);
+      }
+    }
+
+    fetchSearchResults();
+  }, [debouncedSearchQuery]);
 
   // Focus search input when it opens
   useEffect(() => {
@@ -60,24 +93,84 @@ export default function Header() {
 
         {/* Search Bar - Expands to take available space when open */}
         <div className={`absolute left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 transition-all duration-300 ease-in-out z-10 ${isSearchOpen ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-95'}`}>
-          <form onSubmit={handleSearchSubmit} className="relative w-full flex items-center">
-            <Search className="absolute left-7 text-gray-400 w-5 h-5 pointer-events-none" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm sản phẩm, thương hiệu..."
-              className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-full py-2.5 pl-12 pr-10 outline-none focus:ring-2 focus:ring-primary shadow-sm text-sm transition-all"
-            />
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(false)}
-              className="absolute right-7 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-full"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </form>
+          <div className="relative w-full">
+            <form onSubmit={handleSearchSubmit} className="relative w-full flex items-center">
+              {isSearching ? (
+                <Loader2 className="absolute left-7 text-gray-400 w-5 h-5 pointer-events-none animate-spin" />
+              ) : (
+                <Search className="absolute left-7 text-gray-400 w-5 h-5 pointer-events-none" />
+              )}
+              
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm sản phẩm, thương hiệu..."
+                className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-full py-3 pl-12 pr-12 outline-none focus:ring-2 focus:ring-primary shadow-sm text-sm transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }}
+                className="absolute right-7 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-full"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* Live Search Dropdown */}
+            {isSearchOpen && searchQuery.trim() !== '' && (
+              <div className="absolute top-full left-4 right-4 mt-2 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden max-h-[70vh] overflow-y-auto">
+                {searchResults.length > 0 ? (
+                  <div className="py-2">
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Sản phẩm gợi ý
+                    </div>
+                    {searchResults.map((product) => (
+                      <Link 
+                        key={product.id} 
+                        href={`/san-pham/${product.slug}`}
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                          setSearchResults([]);
+                        }}
+                        className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <div className="relative w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                          {product.imageUrl ? (
+                            <Image src={product.imageUrl} alt={product.name} fill className="object-cover" sizes="48px" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</h4>
+                          <p className="text-sm font-semibold text-primary mt-0.5">
+                            {product.price.toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                    <button 
+                      onClick={handleSearchSubmit}
+                      className="w-full text-center py-3 text-sm text-primary font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-t border-gray-100 dark:border-gray-800 mt-2"
+                    >
+                      Xem tất cả kết quả cho &quot;{searchQuery}&quot;
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-gray-500 text-sm">
+                    {isSearching ? 'Đang tìm kiếm...' : `Không tìm thấy kết quả nào cho "${searchQuery}"`}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Icons */}
