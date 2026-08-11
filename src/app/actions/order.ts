@@ -355,13 +355,56 @@ export async function deleteOrder(orderId: string) {
     }
 
     const role = (session.user as any).role;
-    if (role !== 'ADMIN' && role !== 'STAFF' && order.userId !== (session.user as any).id) {
+    const isOwner = order.userId === (session.user as any).id;
+    const isAdminOrStaff = role === 'ADMIN' || role === 'STAFF';
+
+    if (!isAdminOrStaff && !isOwner) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    await prisma.order.delete({
-      where: { id: orderId }
-    });
+    // Restrict normal users from deleting processing/shipped/completed orders
+    if (!isAdminOrStaff && order.status !== 'PENDING' && order.status !== 'CANCELLED') {
+      return { success: false, error: 'Khách hàng chỉ có thể xóa đơn hàng ở trạng thái Chờ xử lý hoặc Đã hủy.' };
+    }
+
+    // If order is not CANCELLED, we must restore stock and points before deleting
+    if (order.status !== 'CANCELLED') {
+      await prisma.$transaction(async (tx) => {
+        // Return used points
+        if (order.userId && order.pointsUsed > 0) {
+          await tx.user.update({
+            where: { id: order.userId },
+            data: {
+              points: { increment: order.pointsUsed },
+              pointsUpdatedAt: new Date(),
+              pointTransactions: {
+                create: {
+                  orderId: order.id,
+                  amount: order.pointsUsed,
+                  type: 'REFUND',
+                  description: `Hoàn điểm do xóa đơn hàng ${order.orderCode}`
+                }
+              }
+            }
+          });
+        }
+        
+        // Restore inventory
+        for (const item of order.items) {
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stockQuantity: { increment: item.quantity } }
+            });
+          }
+        }
+
+        await tx.order.delete({ where: { id: orderId } });
+      });
+    } else {
+      // Already CANCELLED, stock and points were already restored
+      await prisma.order.delete({ where: { id: orderId } });
+    }
 
     revalidatePath('/admin/orders');
     revalidatePath('/thong-tin');
