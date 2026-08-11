@@ -12,9 +12,7 @@ export default async function Home() {
       where: { isActive: true },
       orderBy: { order: 'asc' }
     }),
-    prisma.category.findMany({
-      orderBy: { createdAt: 'desc' }
-    })
+    prisma.category.findMany()
   ]);
 
   return <HomeClient products={products as any} banners={banners} categories={categories} />;
