@@ -196,13 +196,20 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-800">
-                <th className="p-4 w-12">
-                  <input 
-                    type="checkbox" 
-                    checked={isAllPageSelected}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 focus:ring-primary focus:ring-offset-gray-900"
-                  />
+                <th className="p-4 w-12 text-center">
+                  <label className="relative flex items-center justify-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isAllPageSelected}
+                      onChange={handleSelectAll}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 rounded md:rounded-md border-2 border-gray-600 bg-[#1E1E1E] peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-all flex items-center justify-center group-hover:border-gray-400">
+                      <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </label>
                 </th>
                 <th className="p-4 font-semibold uppercase tracking-wider text-xs text-gray-500">Mã đơn</th>
                 <th className="p-4 font-semibold uppercase tracking-wider text-xs text-gray-500">Khách hàng</th>
@@ -223,15 +230,22 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
                 paginatedOrders.map((order) => (
                   <tr 
                     key={order.id} 
-                    className={`border-b border-gray-800/50 hover:bg-[#2A2A2A]/50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-primary/5' : ''}`}
+                    className={`border-b border-gray-800/50 hover:bg-[#2A2A2A]/50 transition-colors group ${selectedOrderIds.includes(order.id) ? 'bg-primary/5' : ''}`}
                   >
-                    <td className="p-4">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedOrderIds.includes(order.id)}
-                        onChange={() => handleSelectRow(order.id)}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 focus:ring-primary focus:ring-offset-gray-900 cursor-pointer"
-                      />
+                    <td className="p-4 text-center">
+                      <label className="relative flex items-center justify-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedOrderIds.includes(order.id)}
+                          onChange={() => handleSelectRow(order.id)}
+                          className="peer sr-only"
+                        />
+                        <div className="w-5 h-5 rounded md:rounded-md border-2 border-gray-600 bg-[#1E1E1E] peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-all flex items-center justify-center group-hover:border-gray-400">
+                          <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </label>
                     </td>
                     <td className="p-4 font-mono text-gray-400">#{order.orderCode}</td>
                     <td className="p-4">
