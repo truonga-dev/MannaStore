@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { z } from "zod";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getStoreSettings } from "@/app/actions/settings";
-
+import { getClientIp } from "@/lib/ip";
 import { headers } from "next/headers";
 
 const schema = z.object({
@@ -32,7 +32,7 @@ export async function createOrder(orderData: any) {
     const data = schema.parse(orderData);
     
     // --- RATE LIMITING ---
-    const ip = (await headers()).get("x-forwarded-for") || "unknown";
+    const ip = await getClientIp();
     if (ip !== "unknown") {
       const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
       const recentOrders = await prisma.rateLimit.count({

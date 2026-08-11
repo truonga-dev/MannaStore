@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { headers } from "next/headers";
+import { getClientIp } from "@/lib/ip";
 import dns from "dns/promises";
 
 // Danh sách domain rác phổ biến
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // --- 1. RATE LIMITING ---
-    const ip = (await headers()).get("x-forwarded-for") || "unknown";
+    const ip = await getClientIp();
     if (ip !== "unknown") {
       const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
       const recentRegisters = await prisma.rateLimit.count({
