@@ -202,7 +202,7 @@ export default function AnalyticsClient() {
                     <RechartsTooltip 
                       contentStyle={{ backgroundColor: '#1E1E1E', borderColor: '#333', borderRadius: '8px' }}
                       itemStyle={{ color: '#E5E7EB' }}
-                      formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
+                      formatter={(value: any) => [formatCurrency(value as number), 'Doanh thu']}
                     />
                     <Line 
                       type="monotone" 
