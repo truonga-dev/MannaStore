@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import toast from "react-hot-toast";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/components/auth/Providers";
 import FavoriteButton from "./FavoriteButton";
 
 type Variant = {
@@ -29,7 +29,7 @@ type ProductCardProps = {
 export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore(state => state.addItem);
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
 
   const minPrice = product.variants.length > 0 
     ? Math.min(...product.variants.map(v => v.price))

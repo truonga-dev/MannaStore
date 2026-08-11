@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuthSession } from "@/components/auth/Providers";
 import toast from "react-hot-toast";
 
 interface FavoriteButtonProps {
@@ -11,7 +11,7 @@ interface FavoriteButtonProps {
 }
 
 export default function FavoriteButton({ productId, initialIsFavorite = false }: FavoriteButtonProps) {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuthSession();
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [loading, setLoading] = useState(false);
 

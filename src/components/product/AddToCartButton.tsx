@@ -4,7 +4,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuthSession } from '@/components/auth/Providers';
 
 interface Variant {
   id: string;
@@ -40,7 +40,7 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const addItem = useCartStore(state => state.addItem);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
 
   const handleAddToCart = () => {
     if (!session) {

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { User, Search, Menu, X, LogOut } from 'lucide-react';
 import CartIcon from '@/components/cart/CartIcon';
 import { useState, useRef, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+import { useAuthSession } from '@/components/auth/Providers';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
@@ -12,7 +13,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 

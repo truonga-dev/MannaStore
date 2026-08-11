@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function GET(
   req: Request,
@@ -59,6 +60,7 @@ export async function PATCH(
       },
     });
 
+    revalidatePath('/');
     return NextResponse.json(banner);
   } catch (error) {
     console.error("Error updating banner:", error);
@@ -84,6 +86,7 @@ export async function DELETE(
       where: { id: resolvedParams.id },
     });
 
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting banner:", error);
