@@ -52,7 +52,7 @@ export default function ProfileDashboard({ user, orders }: { user: any, orders: 
             <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">{user.name || 'Người dùng'}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{user.email}</p>
           </div>
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1 pb-20 md:pb-4">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;

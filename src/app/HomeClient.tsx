@@ -163,7 +163,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
                 variants={textVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-white font-serif text-5xl md:text-7xl font-bold leading-[1.05] mb-5 whitespace-pre-line"
+                className="text-white font-serif text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] mb-5 whitespace-pre-line"
               >
                 {BANNERS[currentBanner].title}
               </motion.h1>
@@ -185,7 +185,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
               >
                 <Link
                   href={BANNERS[currentBanner].link}
-                  className="group relative inline-flex items-center gap-3 bg-white text-gray-900 font-bold px-8 py-4 rounded-full overflow-hidden hover:shadow-2xl transition-shadow duration-300"
+                  className="group relative inline-flex items-center gap-3 bg-white text-gray-900 font-bold px-6 py-3 md:px-8 md:py-4 rounded-full overflow-hidden hover:shadow-2xl transition-shadow duration-300"
                 >
                   <span className="relative z-10">{BANNERS[currentBanner].cta}</span>
                   <motion.span
@@ -204,7 +204,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
           </AnimatePresence>
 
           {/* Carousel Controls */}
-          <div className="absolute right-6 md:right-16 bottom-20 flex flex-col items-center gap-4">
+          <div className="absolute right-4 bottom-24 md:right-16 md:bottom-20 flex flex-col items-center gap-4">
             {/* Slide counter */}
             <span className="text-white/40 text-xs font-mono tracking-widest">
               {String(currentBanner + 1).padStart(2, "0")} / {String(BANNERS.length).padStart(2, "0")}
