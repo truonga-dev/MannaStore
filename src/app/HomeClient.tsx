@@ -228,6 +228,7 @@ export default function HomeClient({ products, banners, categories }: { products
           </div>
         </div>
       </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — CATEGORIES (Horizontal scroll pills)
