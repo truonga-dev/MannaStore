@@ -12,8 +12,9 @@ export const metadata: Metadata = {
 export default async function EditBannerPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as any).role !== "ADMIN" && (session.user as any).role !== "STAFF") {
@@ -21,7 +22,7 @@ export default async function EditBannerPage({
   }
 
   const banner = await prisma.banner.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!banner) {
