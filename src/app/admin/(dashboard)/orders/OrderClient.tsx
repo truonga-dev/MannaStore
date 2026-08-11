@@ -19,13 +19,22 @@ const getStatusBadge = (status: string) => {
 
 export default function OrderClient({ initialOrders }: { initialOrders: any[] }) {
   const [orders, setOrders] = useState(initialOrders);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkActionType, setBulkActionType] = useState<"DELETE" | "STATUS" | null>(null);
+  
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [newStatus, setNewStatus] = useState("");
+  const [bulkNewStatus, setBulkNewStatus] = useState("");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -75,6 +84,7 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
       if (res.success) {
         toast.success("Xóa đơn hàng thành công");
         setOrders(orders.filter(o => o.id !== orderToDelete));
+        setSelectedOrderIds(prev => prev.filter(id => id !== orderToDelete));
         setIsDeleteModalOpen(false);
         setOrderToDelete(null);
       } else {
@@ -84,6 +94,59 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
       toast.error("Đã xảy ra lỗi");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const pageIds = paginatedOrders.map(o => o.id);
+      // Merge unique IDs
+      setSelectedOrderIds(prev => Array.from(new Set([...prev, ...pageIds])));
+    } else {
+      const pageIds = paginatedOrders.map(o => o.id);
+      setSelectedOrderIds(prev => prev.filter(id => !pageIds.includes(id)));
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedOrderIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const isAllPageSelected = paginatedOrders.length > 0 && paginatedOrders.every(o => selectedOrderIds.includes(o.id));
+
+  const handleBulkSubmit = async () => {
+    if (selectedOrderIds.length === 0 || !bulkActionType) return;
+    
+    setIsBulkProcessing(true);
+    let successCount = 0;
+    
+    try {
+      if (bulkActionType === "DELETE") {
+        // Bulk Delete
+        for (const id of selectedOrderIds) {
+          const res = await deleteOrder(id);
+          if (res.success) successCount++;
+        }
+        setOrders(prev => prev.filter(o => !selectedOrderIds.includes(o.id)));
+        toast.success(`Đã xóa thành công ${successCount} đơn hàng`);
+      } else if (bulkActionType === "STATUS" && bulkNewStatus) {
+        // Bulk Status Update
+        for (const id of selectedOrderIds) {
+          const res = await updateOrderStatus(id, bulkNewStatus);
+          if (res.success) successCount++;
+        }
+        setOrders(prev => prev.map(o => selectedOrderIds.includes(o.id) ? { ...o, status: bulkNewStatus } : o));
+        toast.success(`Đã cập nhật trạng thái ${successCount} đơn hàng`);
+      }
+      
+      setSelectedOrderIds([]);
+      setIsBulkModalOpen(false);
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi xử lý hàng loạt");
+    } finally {
+      setIsBulkProcessing(false);
     }
   };
 
@@ -133,6 +196,14 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-800">
+                <th className="p-4 w-12">
+                  <input 
+                    type="checkbox" 
+                    checked={isAllPageSelected}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 focus:ring-primary focus:ring-offset-gray-900"
+                  />
+                </th>
                 <th className="p-4 font-semibold uppercase tracking-wider text-xs text-gray-500">Mã đơn</th>
                 <th className="p-4 font-semibold uppercase tracking-wider text-xs text-gray-500">Khách hàng</th>
                 <th className="p-4 font-semibold uppercase tracking-wider text-xs text-gray-500">Ngày đặt</th>
@@ -150,7 +221,18 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
                 </tr>
               ) : (
                 paginatedOrders.map((order) => (
-                  <tr key={order.id} className="border-b border-gray-800/50 hover:bg-[#2A2A2A]/50 transition-colors">
+                  <tr 
+                    key={order.id} 
+                    className={`border-b border-gray-800/50 hover:bg-[#2A2A2A]/50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-primary/5' : ''}`}
+                  >
+                    <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedOrderIds.includes(order.id)}
+                        onChange={() => handleSelectRow(order.id)}
+                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 focus:ring-primary focus:ring-offset-gray-900 cursor-pointer"
+                      />
+                    </td>
                     <td className="p-4 font-mono text-gray-400">#{order.orderCode}</td>
                     <td className="p-4">
                       <div className="font-medium text-gray-200">{order.shippingName}</div>
@@ -292,6 +374,118 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
                   className="bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md disabled:opacity-50 disabled:hover:translate-y-0 transition-all"
                 >
                   {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions Toolbar (Floating at bottom) */}
+      {selectedOrderIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 md:ml-32 z-40 bg-[#2A2A2A] border border-gray-700 shadow-2xl rounded-full px-6 py-3 flex items-center gap-6 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
+              {selectedOrderIds.length}
+            </div>
+            <span className="text-sm font-medium text-gray-200">Đang chọn</span>
+          </div>
+          
+          <div className="w-px h-6 bg-gray-600"></div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                setBulkActionType("STATUS");
+                setBulkNewStatus("PENDING");
+                setIsBulkModalOpen(true);
+              }}
+              className="text-sm font-medium text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-1.5"
+            >
+              <Edit size={16} />
+              Đổi trạng thái
+            </button>
+            <button 
+              onClick={() => {
+                setBulkActionType("DELETE");
+                setIsBulkModalOpen(true);
+              }}
+              className="text-sm font-medium text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors flex items-center gap-1.5"
+            >
+              <Trash2 size={16} />
+              Xóa mục chọn
+            </button>
+          </div>
+          
+          <div className="w-px h-6 bg-gray-600"></div>
+          
+          <button 
+            onClick={() => setSelectedOrderIds([])}
+            className="text-sm text-gray-400 hover:text-gray-200 p-1.5 rounded-full hover:bg-white/10 transition-colors"
+            title="Bỏ chọn tất cả"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
+      {/* Bulk Action Modal */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#1E1E1E] border border-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-800">
+              <h2 className={`font-semibold text-gray-100 flex items-center gap-2 ${bulkActionType === 'DELETE' ? 'text-red-400' : ''}`}>
+                {bulkActionType === 'DELETE' ? <Trash2 size={18} /> : <Edit size={18} />}
+                {bulkActionType === 'DELETE' ? 'Xác nhận xóa hàng loạt' : 'Cập nhật trạng thái hàng loạt'}
+              </h2>
+              <button 
+                onClick={() => setIsBulkModalOpen(false)} 
+                className="text-gray-500 hover:bg-gray-800 hover:text-white p-1 rounded-lg transition-colors"
+                disabled={isBulkProcessing}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <p className="text-sm font-medium text-gray-300">
+                Bạn đang thao tác trên <strong className="text-white">{selectedOrderIds.length}</strong> đơn hàng. 
+                {bulkActionType === 'DELETE' && " Thao tác này không thể hoàn tác."}
+              </p>
+              
+              {bulkActionType === 'STATUS' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-400">Trạng thái mới áp dụng chung</label>
+                  <select
+                    value={bulkNewStatus}
+                    onChange={e => setBulkNewStatus(e.target.value)}
+                    className="w-full border border-gray-700 p-2.5 rounded-xl bg-[#121212] focus:ring-1 focus:ring-blue-500 outline-none font-medium text-gray-200"
+                  >
+                    <option value="PENDING">Chờ xử lý</option>
+                    <option value="UNPAID">Đang chuẩn bị hàng</option>
+                    <option value="SHIPPING">Đang giao hàng</option>
+                    <option value="COMPLETED">Hoàn thành</option>
+                    <option value="CANCELLED">Đã hủy</option>
+                  </select>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkModalOpen(false)}
+                  disabled={isBulkProcessing}
+                  className="px-5 py-2.5 text-sm font-bold text-gray-400 bg-[#2A2A2A] hover:bg-[#333] hover:text-white rounded-full transition-all disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkSubmit}
+                  disabled={isBulkProcessing}
+                  className={`${bulkActionType === 'DELETE' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md disabled:opacity-50 disabled:hover:translate-y-0 transition-all`}
+                >
+                  {isBulkProcessing ? "Đang xử lý..." : "Xác nhận"}
                 </button>
               </div>
             </div>
