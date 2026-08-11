@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import Providers from "@/components/auth/Providers";
 import MainLayout from "@/components/layout/MainLayout";
 import AnalyticsProvider from "@/components/AnalyticsProvider";
+import PixelEvents from "@/components/PixelEvents";
 
 const inter = Inter({
   subsets: ["vietnamese"],
@@ -43,6 +44,7 @@ export default function RootLayout({
             <MainLayout>
               {children}
             </MainLayout>
+            <PixelEvents />
           </AnalyticsProvider>
         </Providers>
       </body>

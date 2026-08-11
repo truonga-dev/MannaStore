@@ -2,11 +2,20 @@ import prisma from "@/lib/prisma";
 import HomeClient from "./HomeClient";
 
 export default async function Home() {
-  let products = await prisma.product.findMany({
-    take: 8,
-    include: { variants: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [products, banners, categories] = await Promise.all([
+    prisma.product.findMany({
+      take: 8,
+      include: { variants: true },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.banner.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' }
+    }),
+    prisma.category.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+  ]);
 
-  return <HomeClient products={products as any} />;
+  return <HomeClient products={products as any} banners={banners} categories={categories} />;
 }

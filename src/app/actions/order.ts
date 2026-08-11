@@ -337,3 +337,41 @@ export async function updateOrderStatus(orderId: string, status: string) {
     return { success: false, error: "Failed to update order status" };
   }
 }
+e x p o r t   a s y n c   f u n c t i o n   d e l e t e O r d e r ( o r d e r I d :   s t r i n g )   { 
+     t r y   { 
+         c o n s t   s e s s i o n   =   a w a i t   g e t S e r v e r S e s s i o n ( a u t h O p t i o n s ) ; 
+         i f   ( ! s e s s i o n )   { 
+             r e t u r n   {   s u c c e s s :   f a l s e ,   e r r o r :   ' U n a u t h o r i z e d '   } ; 
+         } 
+ 
+         c o n s t   o r d e r   =   a w a i t   p r i s m a . o r d e r . f i n d U n i q u e ( { 
+             w h e r e :   {   i d :   o r d e r I d   } , 
+             i n c l u d e :   {   i t e m s :   t r u e   } , 
+         } ) ; 
+ 
+         i f   ( ! o r d e r )   { 
+             r e t u r n   {   s u c c e s s :   f a l s e ,   e r r o r :   ' O r d e r   n o t   f o u n d '   } ; 
+         } 
+ 
+         / /   R o l e   c h e c k :   O n l y   A D M I N / S T A F F   c a n   d e l e t e   a n y   o r d e r ,   U S E R   c a n   o n l y   d e l e t e   t h e i r   o w n 
+         c o n s t   r o l e   =   ( s e s s i o n . u s e r   a s   a n y ) . r o l e ; 
+         i f   ( r o l e   ! = =   ' A D M I N '   & &   r o l e   ! = =   ' S T A F F '   & &   o r d e r . u s e r I d   ! = =   ( s e s s i o n . u s e r   a s   a n y ) . i d )   { 
+             r e t u r n   {   s u c c e s s :   f a l s e ,   e r r o r :   ' U n a u t h o r i z e d '   } ; 
+         } 
+ 
+         / /   A l s o   m a y b e   o n l y   a l l o w   d e l e t i n g   i f   C A N C E L L E D   o r   P E N D I N G   f o r   u s e r s ,   b u t   a d m i n   c a n   d e l e t e   a n y t h i n g ? 
+         / /   U s e r   r e q u e s t e d   ' d e l e t e   o r d e r   h i s t o r y ' ,   s o   t h e y   s h o u l d   b e   a b l e   t o   d e l e t e   i t   f o r   c l e a n u p . 
+ 
+         a w a i t   p r i s m a . o r d e r . d e l e t e ( { 
+             w h e r e :   {   i d :   o r d e r I d   } 
+         } ) ; 
+ 
+         r e v a l i d a t e P a t h ( ' / a d m i n / o r d e r s ' ) ; 
+         r e v a l i d a t e P a t h ( ' / t h o n g - t i n ' ) ; 
+         r e t u r n   {   s u c c e s s :   t r u e   } ; 
+     }   c a t c h   ( e r r o r )   { 
+         c o n s o l e . e r r o r ( ' E r r o r   d e l e t i n g   o r d e r : ' ,   e r r o r ) ; 
+         r e t u r n   {   s u c c e s s :   f a l s e ,   e r r o r :   ' F a i l e d   t o   d e l e t e   o r d e r '   } ; 
+     } 
+ }  
+ 

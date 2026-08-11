@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Printer, Edit, X } from "lucide-react";
-import { updateOrderStatus } from "@/app/actions/order";
+import { Printer, Edit, X, Trash2 } from "lucide-react";
+import { updateOrderStatus, deleteOrder } from "@/app/actions/order";
 import toast from "react-hot-toast";
 import Pagination from "@/components/ui/Pagination";
 
@@ -55,6 +55,22 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
       toast.error("Đã xảy ra lỗi");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này? Thao tác này không thể hoàn tác.")) return;
+
+    try {
+      const res = await deleteOrder(orderId);
+      if (res.success) {
+        toast.success("Xóa đơn hàng thành công");
+        setOrders(orders.filter(o => o.id !== orderId));
+      } else {
+        toast.error("Lỗi: " + res.error);
+      }
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi");
     }
   };
 
@@ -149,6 +165,13 @@ export default function OrderClient({ initialOrders }: { initialOrders: any[] })
                           title="In hóa đơn"
                         >
                           <Printer size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                          title="Xóa đơn hàng"
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>

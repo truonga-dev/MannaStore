@@ -14,7 +14,8 @@ import {
   FileText,
   ChevronRight,
   BarChart2,
-  MessageSquare
+  MessageSquare,
+  Image
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
@@ -27,6 +28,12 @@ const menuGroups = [
       { label: "Sản phẩm", href: "/admin/products", icon: <PackageOpen size={18} />, allowedRoles: ["ADMIN", "STAFF"] },
       { label: "Danh mục", href: "/admin/categories", icon: <Tags size={18} />, allowedRoles: ["ADMIN"] },
       { label: "Bài viết", href: "/admin/articles", icon: <FileText size={18} />, allowedRoles: ["ADMIN"] },
+    ]
+  },
+  {
+    title: "Giao diện",
+    items: [
+      { label: "Banners", href: "/admin/banners", icon: <Image size={18} />, allowedRoles: ["ADMIN"] },
     ]
   },
   {

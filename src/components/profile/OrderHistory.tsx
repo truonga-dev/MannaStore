@@ -1,9 +1,11 @@
 'use client';
 
-import { Calendar, Package, CreditCard, ChevronRight } from 'lucide-react';
+import { Calendar, Package, CreditCard, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import Pagination from '../ui/Pagination';
+import { deleteOrder } from '@/app/actions/order';
+import toast from 'react-hot-toast';
 
 export default function OrderHistory({ orders }: { orders: any[] }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,6 +38,26 @@ export default function OrderHistory({ orders }: { orders: any[] }) {
   const totalPages = Math.ceil(orders.length / itemsPerPage);
   const paginatedOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  const handleDelete = async (orderId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa lịch sử đơn hàng này? Thao tác này không thể hoàn tác.")) return;
+    
+    setIsDeleting(orderId);
+    try {
+      const res = await deleteOrder(orderId);
+      if (res.success) {
+        toast.success("Xóa lịch sử đơn hàng thành công");
+      } else {
+        toast.error("Lỗi: " + res.error);
+      }
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi xóa");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {paginatedOrders.map((order) => (
@@ -65,6 +87,14 @@ export default function OrderHistory({ orders }: { orders: any[] }) {
             </div>
             <div>
               {getStatusBadge(order.status)}
+              <button 
+                onClick={() => handleDelete(order.id)}
+                disabled={isDeleting === order.id}
+                className="ml-3 inline-flex items-center p-1.5 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                title="Xóa lịch sử đơn hàng"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
           

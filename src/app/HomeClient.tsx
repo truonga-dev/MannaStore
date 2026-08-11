@@ -18,43 +18,17 @@ type ProductWithVariants = {
 };
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
-const BANNERS = [
-  {
-    src: "/banners/banner1_v2.jpg",
-    link: "/danh-muc/thoi-trang",
-    eyebrow: "Bộ sưu tập 2026",
-    title: "Mặc đức tin\nvào cuộc sống",
-    sub: "Áo Hoodie & Áo Thun thiết kế độc quyền",
-    cta: "Khám phá ngay",
-  },
-  {
-    src: "/banners/banner2_v2.jpg",
-    link: "/danh-muc/thoi-trang",
-    eyebrow: "Phong cách tối giản",
-    title: "Đơn giản\nmà sâu sắc",
-    sub: "Thiết kế tinh tế — Thông điệp chân thành",
-    cta: "Xem bộ sưu tập",
-  },
-  {
-    src: "/banners/banner3_v2.jpg",
-    link: "/san-pham",
-    eyebrow: "Độc quyền Manna",
-    title: "Quà tặng\ncó ý nghĩa",
-    sub: "Mỗi sản phẩm kể một câu chuyện riêng",
-    cta: "Mua ngay",
-  },
-];
-
-const CATEGORIES = [
-  { name: "Áo Thun", icon: <Shirt size={22} strokeWidth={1.25} />, link: "/danh-muc/ao-thun", bg: "bg-[#0e1d35]", color: "text-[#3b82f6]" },
-  { name: "Hoodie", icon: <Shirt size={22} strokeWidth={1.25} />, link: "/danh-muc/ao-hoodie", bg: "bg-[#201035]", color: "text-[#a855f7]" },
-  { name: "Móc Khóa", icon: <Key size={22} strokeWidth={1.25} />, link: "/danh-muc/moc-khoa", bg: "bg-[#35250a]", color: "text-[#eab308]" },
-  { name: "Sách", icon: <Book size={22} strokeWidth={1.25} />, link: "/danh-muc/sach", bg: "bg-[#082a1a]", color: "text-[#10b981]" },
-  { name: "Ly & Cốc", icon: <Coffee size={22} strokeWidth={1.25} />, link: "/danh-muc/ly-coc", bg: "bg-[#351018]", color: "text-[#f43f5e]" },
-  { name: "Đồng hồ", icon: <Watch size={22} strokeWidth={1.25} />, link: "/danh-muc/dong-ho", bg: "bg-[#1a1c23]", color: "text-[#9ca3af]" },
-  { name: "Quà Tặng", icon: <Gift size={22} strokeWidth={1.25} />, link: "/danh-muc/qua-tang", bg: "bg-[#350a20]", color: "text-[#ec4899]" },
-  { name: "Phụ kiện", icon: <Music size={22} strokeWidth={1.25} />, link: "/danh-muc/phu-kien", bg: "bg-[#351a08]", color: "text-[#f97316]" },
-];
+const CATEGORY_ICONS: Record<string, { icon: React.ReactNode, bg: string, color: string }> = {
+  "ao-thun": { icon: <Shirt size={22} strokeWidth={1.25} />, bg: "bg-[#0e1d35]", color: "text-[#3b82f6]" },
+  "ao-hoodie": { icon: <Shirt size={22} strokeWidth={1.25} />, bg: "bg-[#201035]", color: "text-[#a855f7]" },
+  "moc-khoa": { icon: <Key size={22} strokeWidth={1.25} />, bg: "bg-[#35250a]", color: "text-[#eab308]" },
+  "sach": { icon: <Book size={22} strokeWidth={1.25} />, bg: "bg-[#082a1a]", color: "text-[#10b981]" },
+  "ly-coc": { icon: <Coffee size={22} strokeWidth={1.25} />, bg: "bg-[#351018]", color: "text-[#f43f5e]" },
+  "dong-ho": { icon: <Watch size={22} strokeWidth={1.25} />, bg: "bg-[#1a1c23]", color: "text-[#9ca3af]" },
+  "qua-tang": { icon: <Gift size={22} strokeWidth={1.25} />, bg: "bg-[#350a20]", color: "text-[#ec4899]" },
+  "phu-kien": { icon: <Music size={22} strokeWidth={1.25} />, bg: "bg-[#351a08]", color: "text-[#f97316]" },
+  "default": { icon: <Sparkles size={22} strokeWidth={1.25} />, bg: "bg-[#1a1c23]", color: "text-[#9ca3af]" }
+};
 
 // ─── Reusable Animation Components ─────────────────────────────────────────────
 function RevealOnScroll({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -83,7 +57,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
-export default function HomeClient({ products }: { products: ProductWithVariants[] }) {
+export default function HomeClient({ products, banners, categories }: { products: ProductWithVariants[], banners: any[], categories: any[] }) {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [bannerDir, setBannerDir] = useState(1); // 1 = next, -1 = prev
   const heroRef = useRef(null);
@@ -91,14 +65,19 @@ export default function HomeClient({ products }: { products: ProductWithVariants
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
+  // Handle case where no banners exist
+  const hasBanners = banners && banners.length > 0;
+  const currentBannerData = hasBanners ? banners[currentBanner] : null;
+
   // Auto-play
   useEffect(() => {
-    const t = setInterval(() => { setBannerDir(1); setCurrentBanner(p => (p + 1) % BANNERS.length); }, 5500);
+    if (!hasBanners) return;
+    const t = setInterval(() => { setBannerDir(1); setCurrentBanner(p => (p + 1) % banners.length); }, 5500);
     return () => clearInterval(t);
-  }, []);
+  }, [hasBanners, banners.length]);
 
-  const goNext = () => { setBannerDir(1); setCurrentBanner(p => (p + 1) % BANNERS.length); };
-  const goPrev = () => { setBannerDir(-1); setCurrentBanner(p => (p - 1 + BANNERS.length) % BANNERS.length); };
+  const goNext = () => { setBannerDir(1); setCurrentBanner(p => (p + 1) % banners.length); };
+  const goPrev = () => { setBannerDir(-1); setCurrentBanner(p => (p - 1 + banners.length) % banners.length); };
 
   const slideVariants = {
     enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -118,6 +97,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
       {/* ═══════════════════════════════════════════════════════
           SECTION 1 — HERO FULLSCREEN SLIDER
       ═══════════════════════════════════════════════════════ */}
+      {hasBanners && (
       <section ref={heroRef} className="relative w-full h-[90vh] min-h-[560px] overflow-hidden">
         {/* Parallax image layer */}
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0 w-full h-full">
@@ -132,8 +112,8 @@ export default function HomeClient({ products }: { products: ProductWithVariants
               className="absolute inset-0"
             >
               <Image
-                src={BANNERS[currentBanner].src}
-                alt={BANNERS[currentBanner].title}
+                src={currentBannerData.src}
+                alt={currentBannerData.title}
                 fill
                 className="object-cover"
                 priority
@@ -149,6 +129,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
         <div className="relative z-10 h-full flex flex-col justify-end pb-20 px-6 md:px-16 lg:px-24 max-w-7xl mx-auto w-full">
           <AnimatePresence mode="wait">
             <motion.div key={`text-${currentBanner}`} className="max-w-2xl">
+              {currentBannerData.eyebrow && (
               <motion.p
                 custom={0}
                 variants={textVariants}
@@ -156,8 +137,9 @@ export default function HomeClient({ products }: { products: ProductWithVariants
                 animate="visible"
                 className="text-white/60 text-xs uppercase tracking-[0.35em] font-medium mb-4"
               >
-                {BANNERS[currentBanner].eyebrow}
+                {currentBannerData.eyebrow}
               </motion.p>
+              )}
               <motion.h1
                 custom={1}
                 variants={textVariants}
@@ -165,8 +147,9 @@ export default function HomeClient({ products }: { products: ProductWithVariants
                 animate="visible"
                 className="text-white font-serif text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] mb-5 whitespace-pre-line"
               >
-                {BANNERS[currentBanner].title}
+                {currentBannerData.title}
               </motion.h1>
+              {currentBannerData.sub && (
               <motion.p
                 custom={2}
                 variants={textVariants}
@@ -174,8 +157,9 @@ export default function HomeClient({ products }: { products: ProductWithVariants
                 animate="visible"
                 className="text-white/70 text-base md:text-lg mb-10 font-light"
               >
-                {BANNERS[currentBanner].sub}
+                {currentBannerData.sub}
               </motion.p>
+              )}
               <motion.div
                 custom={3}
                 variants={textVariants}
@@ -184,10 +168,10 @@ export default function HomeClient({ products }: { products: ProductWithVariants
                 className="flex items-center gap-4"
               >
                 <Link
-                  href={BANNERS[currentBanner].link}
+                  href={currentBannerData.link || "#"}
                   className="group relative inline-flex items-center gap-3 bg-white text-gray-900 font-bold px-6 py-3 md:px-8 md:py-4 rounded-full overflow-hidden hover:shadow-2xl transition-shadow duration-300"
                 >
-                  <span className="relative z-10">{BANNERS[currentBanner].cta}</span>
+                  <span className="relative z-10">{currentBannerData.cta || "Khám phá ngay"}</span>
                   <motion.span
                     className="relative z-10"
                     initial={{ x: 0 }}
@@ -204,14 +188,15 @@ export default function HomeClient({ products }: { products: ProductWithVariants
           </AnimatePresence>
 
           {/* Carousel Controls */}
+          {banners.length > 1 && (
           <div className="absolute right-4 bottom-24 md:right-16 md:bottom-20 flex flex-col items-center gap-4">
             {/* Slide counter */}
             <span className="text-white/40 text-xs font-mono tracking-widest">
-              {String(currentBanner + 1).padStart(2, "0")} / {String(BANNERS.length).padStart(2, "0")}
+              {String(currentBanner + 1).padStart(2, "0")} / {String(banners.length).padStart(2, "0")}
             </span>
             {/* Dots */}
             <div className="flex flex-col gap-2">
-              {BANNERS.map((_, idx) => (
+              {banners.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => { setBannerDir(idx > currentBanner ? 1 : -1); setCurrentBanner(idx); }}
@@ -229,6 +214,7 @@ export default function HomeClient({ products }: { products: ProductWithVariants
               </button>
             </div>
           </div>
+          )}
 
           {/* Bottom progress bar */}
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10">
@@ -255,22 +241,24 @@ export default function HomeClient({ products }: { products: ProductWithVariants
         </RevealOnScroll>
 
         <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-3 md:gap-4 mt-8">
-          {CATEGORIES.map((cat, idx) => (
-            <RevealOnScroll key={idx} delay={idx * 0.05}>
-              <Link href={cat.link} className="group flex flex-col items-center gap-3">
+          {categories.map((cat, idx) => {
+            const iconData = CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS["default"];
+            return (
+            <RevealOnScroll key={cat.id} delay={idx * 0.05}>
+              <Link href={`/danh-muc/${cat.slug}`} className="group flex flex-col items-center gap-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`w-[70px] h-[70px] rounded-[22px] flex items-center justify-center transition-all shadow-sm group-hover:shadow-md ${cat.bg} ${cat.color}`}
+                  className={`w-[70px] h-[70px] rounded-[22px] flex items-center justify-center transition-all shadow-sm group-hover:shadow-md ${iconData.bg} ${iconData.color}`}
                 >
-                  {cat.icon}
+                  {iconData.icon}
                 </motion.div>
                 <span className="text-[11px] md:text-xs font-medium text-gray-700 dark:text-gray-300 text-center transition-colors leading-tight">
                   {cat.name}
                 </span>
               </Link>
             </RevealOnScroll>
-          ))}
+          )})}
         </div>
       </section>
 
