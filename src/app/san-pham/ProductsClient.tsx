@@ -2,11 +2,10 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import ProductCard from "@/components/product/ProductCard";
-import { CATEGORY_MAP } from "@/lib/sampleData";
 import { Filter, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function ProductsClient({ initialProducts }: { initialProducts: any[] }) {
+export default function ProductsClient({ initialProducts, dbCategories }: { initialProducts: any[], dbCategories: any[] }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<string>("newest");
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -14,7 +13,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: a
   const [visibleCount, setVisibleCount] = useState(10);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const categories = [{ id: "all", name: "Tất cả" }, ...Object.entries(CATEGORY_MAP).map(([id, name]) => ({ id, name }))];
+  const categories = [{ id: "all", name: "Tất cả" }, ...dbCategories.map(c => ({ id: c.id, name: c.name, slug: c.slug }))];
   
   useEffect(() => {
     const updateVisible = () => {
@@ -54,7 +53,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: a
     
     // Filter
     if (activeCategory !== "all") {
-      result = result.filter(p => p.categoryId === activeCategory || (activeCategory === 'thoi-trang' && (p.categoryId === 'ao-thun' || p.categoryId === 'ao-hoodie')));
+      result = result.filter(p => p.categoryId === activeCategory);
     }
 
     // Sort
