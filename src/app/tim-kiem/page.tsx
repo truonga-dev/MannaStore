@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import ProductCard from "@/components/product/ProductCard";
 
 export default async function SearchPage({
   searchParams,
@@ -12,13 +13,30 @@ export default async function SearchPage({
 
   const products = await prisma.product.findMany({
     where: {
-      name: {
-        contains: query,
-        // mode: 'insensitive' is not supported in SQLite, but we can do a standard contains
-      }
+      OR: [
+        {
+          name: {
+            contains: query,
+            mode: 'insensitive',
+          }
+        },
+        {
+          description: {
+            contains: query,
+            mode: 'insensitive',
+          }
+        },
+        {
+          slug: {
+            contains: query,
+            mode: 'insensitive',
+          }
+        }
+      ]
     },
     include: {
-      variants: true
+      variants: true,
+      category: true,
     }
   });
 
@@ -31,34 +49,20 @@ export default async function SearchPage({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {products.map((product) => {
-          const minPrice = product.variants.length > 0 
-            ? Math.min(...product.variants.map(v => v.price))
-            : 0;
-            
-          return (
-            <Link href={`/san-pham/${product.slug}`} key={product.id} className="group block">
-              <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-gray-100 rounded-lg">
-                {product.imageUrl && (
-                  <Image 
-                    src={product.imageUrl}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                  />
-                )}
-              </div>
-              <div className="text-center">
-                <h3 className="font-medium text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 px-2">{product.name}</h3>
-                <p className="text-gray-600 font-serif font-semibold text-lg">
-                  {minPrice.toLocaleString('vi-VN')}đ
-                </p>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      {products.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-gray-50 rounded-xl">
+          <p className="text-xl text-gray-500 mb-4">Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp.</p>
+          <Link href="/san-pham" className="text-primary hover:underline font-medium">
+            Xem tất cả sản phẩm
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
