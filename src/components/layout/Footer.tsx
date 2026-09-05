@@ -22,7 +22,6 @@ const YoutubeIcon = ({ size = 16, className = "" }: { size?: number, className?:
 const STORE_LINKS = [
   { label: "Tất cả sản phẩm", href: "/san-pham" },
   { label: "Áo Thun & Hoodie", href: "/danh-muc/ao-thun" },
-  { label: "Quà Tặng", href: "/danh-muc/qua-tang" },
   { label: "Sách & Sổ tay", href: "/danh-muc/sach" },
   { label: "Phụ kiện", href: "/danh-muc/phu-kien" },
 ];

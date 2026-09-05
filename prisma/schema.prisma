@@ -110,6 +110,7 @@ model Order {
   orderCode       String?     @unique
   userId          String?
   user            User?       @relation(fields: [userId], references: [id])
+  customerEmail   String?
   totalAmount     Float
   status          String      @default("PENDING") // PENDING, SHIPPING, COMPLETED, CANCELLED
   paymentMethod   String      @default("MANUAL") // MANUAL, VNPAY, MOMO
@@ -123,6 +124,10 @@ model Order {
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -136,14 +141,18 @@ model OrderItem {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  rating    Int      // 1-5
-  comment   String?
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  rating       Int      // 1-5
+  comment      String?
+  customerName String?  // Optional for guests
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId       String?  // Optional for guests
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
 }
 
 model Favorite {
@@ -166,6 +175,7 @@ model Coupon {
   maxUses            Int?     
   currentUses        Int      @default(0)
   isActive           Boolean  @default(true)
+  expiresAt          DateTime?  // Ngày hết hạn coupon (null = không hết hạn)
 }
 
 model PointTransaction {
@@ -177,6 +187,8 @@ model PointTransaction {
   type        String   // 'EARN', 'SPEND', 'REFUND', 'EXPIRE'
   description String?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Article {
@@ -199,6 +211,8 @@ model RateLimit {
   ip        String
   action    String
   createdAt DateTime @default(now())
+
+  @@index([ip, action, createdAt])
 }
 
 model PageVisit {
@@ -208,6 +222,8 @@ model PageVisit {
   sessionId String?
   userId    String?
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model ActionLog {

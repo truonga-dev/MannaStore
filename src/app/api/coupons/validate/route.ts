@@ -21,6 +21,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Mã giảm giá đã hết hạn hoặc bị khóa" }, { status: 400 });
     }
 
+    if (coupon.expiresAt && new Date() > new Date(coupon.expiresAt)) {
+      return NextResponse.json({ error: "Mã giảm giá đã quá hạn sử dụng" }, { status: 400 });
+    }
+
     if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
       return NextResponse.json({ error: "Mã giảm giá đã hết lượt sử dụng" }, { status: 400 });
     }

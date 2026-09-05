@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { Printer, Edit, X, Trash2 } from "lucide-react";
-import { updateOrderStatus, deleteOrder } from "@/app/actions/order";
+import { updateOrderStatus } from "@/app/actions/adminOrders";
+import { deleteOrder } from "@/app/actions/order";
 import toast from "react-hot-toast";
 import Pagination from "@/components/ui/Pagination";
 

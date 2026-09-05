@@ -86,7 +86,6 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className={`hidden md:flex items-center space-x-8 transition-opacity duration-300 ${isSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100 relative'}`}>
           <Link href="/san-pham" className="text-sm font-medium hover:text-primary/70 transition-colors uppercase tracking-wider">Sản Phẩm</Link>
-          <Link href="/danh-muc/qua-tang" className="text-sm font-medium hover:text-primary/70 transition-colors uppercase tracking-wider">Quà Tặng</Link>
           <Link href="/ve-chung-toi" className="text-sm font-medium hover:text-primary/70 transition-colors uppercase tracking-wider">Câu Chuyện</Link>
           <Link href="/bai-viet" className="text-sm font-medium hover:text-primary/70 transition-colors uppercase tracking-wider">Bài Viết</Link>
         </nav>
@@ -214,7 +213,6 @@ export default function Header() {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white dark:bg-gray-950 px-4 py-4 space-y-4">
           <Link href="/san-pham" className="block text-sm font-medium uppercase tracking-wider p-2">Sản Phẩm</Link>
-          <Link href="/danh-muc/qua-tang" className="block text-sm font-medium uppercase tracking-wider p-2">Quà Tặng</Link>
           <Link href="/ve-chung-toi" className="block text-sm font-medium uppercase tracking-wider p-2">Câu Chuyện</Link>
           <Link href="/bai-viet" className="block text-sm font-medium uppercase tracking-wider p-2">Bài Viết</Link>
           {!session && (

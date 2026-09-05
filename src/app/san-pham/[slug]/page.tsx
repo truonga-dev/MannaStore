@@ -2,7 +2,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ProductClientDetails from "@/components/product/ProductClientDetails";
-import ProductReviews from "@/components/product/ProductReviews";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -86,13 +85,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="container mx-auto px-4 py-12">
       <ProductClientDetails product={product} isFavorite={isFavorite} />
-      
-      {/* Reviews Section */}
-      <ProductReviews 
-        productId={product.id} 
-        initialReviews={product.reviews} 
-        hasPurchased={hasPurchased}
-      />
     </div>
   );
 }

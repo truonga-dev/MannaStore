@@ -11,6 +11,7 @@ export interface CartItem {
   imageUrl?: string | null;
   size?: string | null;
   color?: string | null;
+  maxStock?: number | null;
 }
 
 interface CartStore {
@@ -32,9 +33,13 @@ export const useCartStore = create<CartStore>()(
         set((state) => {
           const existingItem = state.items.find((i) => i.id === id);
           if (existingItem) {
+            const newQty = existingItem.quantity + item.quantity;
+            const clampedQty = typeof item.maxStock === 'number' && item.maxStock > 0 
+              ? Math.min(newQty, item.maxStock) 
+              : newQty;
             return {
               items: state.items.map((i) =>
-                i.id === id ? { ...i, quantity: i.quantity + item.quantity } : i
+                i.id === id ? { ...i, quantity: clampedQty, maxStock: item.maxStock ?? i.maxStock } : i
               ),
             };
           }
@@ -45,7 +50,14 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
       updateQuantity: (id, quantity) =>
         set((state) => ({
-          items: state.items.map((i) => (i.id === id ? { ...i, quantity } : i)),
+          items: state.items.map((i) => {
+            if (i.id !== id) return i;
+            let targetQty = Math.max(1, quantity);
+            if (typeof i.maxStock === 'number' && i.maxStock > 0 && targetQty > i.maxStock) {
+              targetQty = i.maxStock;
+            }
+            return { ...i, quantity: targetQty };
+          }),
         })),
       clearCart: () => set({ items: [] }),
       totalItems: () => get().items.reduce((total, item) => total + item.quantity, 0),

@@ -8,6 +8,12 @@ import bcrypt from "bcrypt";
 
 export async function addPoints(userId: string, amount: number, description: string) {
   try {
+    // Auth check — chỉ ADMIN được cộng/trừ điểm thủ công
+    const session = await getServerSession(authOptions);
+    if (!session?.user || (session.user as any).role !== "ADMIN") {
+      return { success: false, error: "Unauthorized: Only Admin can modify points" };
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error("User not found");
 

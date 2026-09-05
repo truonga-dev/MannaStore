@@ -233,3 +233,134 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     return { success: false, error: String(error) };
   }
 }
+
+export interface OrderStatusEmailData {
+  to: string;
+  customerName: string;
+  orderCode: string;
+  status: string;
+  totalAmount: number;
+}
+
+const STATUS_CONFIG: Record<string, { label: string, color: string, icon: string, message: string }> = {
+  SHIPPING: {
+    label: "Đang giao hàng",
+    color: "#3b82f6", // blue-500
+    icon: "🚚",
+    message: "Đơn hàng của bạn đã được giao cho đơn vị vận chuyển và đang trên đường đến với bạn."
+  },
+  COMPLETED: {
+    label: "Giao hàng thành công",
+    color: "#22c55e", // green-500
+    icon: "✅",
+    message: "Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã mua sắm tại Manna Store!"
+  },
+  CANCELLED: {
+    label: "Đã hủy",
+    color: "#ef4444", // red-500
+    icon: "❌",
+    message: "Đơn hàng của bạn đã bị hủy. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi."
+  }
+};
+
+function buildOrderStatusEmailHtml(data: OrderStatusEmailData): string {
+  const config = STATUS_CONFIG[data.status] || {
+    label: data.status,
+    color: "#6b7280",
+    icon: "ℹ️",
+    message: "Trạng thái đơn hàng của bạn đã được cập nhật."
+  };
+
+  return `
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cập nhật trạng thái đơn hàng</title></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+        
+        <!-- HEADER -->
+        <tr>
+          <td style="background:#0B1B3D;padding:32px;text-align:center;">
+            <h1 style="color:#ffffff;font-family:Georgia,serif;font-size:28px;margin:0;letter-spacing:4px;">MANNA</h1>
+            <p style="color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:3px;margin:4px 0 0;">STORE</p>
+          </td>
+        </tr>
+
+        <!-- STATUS BADGE -->
+        <tr>
+          <td style="padding:40px 32px 24px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:16px;">${config.icon}</div>
+            <h2 style="color:${config.color};font-size:24px;margin:0 0 12px;">${config.label}</h2>
+            <p style="color:#444;margin:0;font-size:16px;line-height:1.5;">Xin chào <strong>${data.customerName}</strong>,</p>
+            <p style="color:#666;margin:8px 0 0;font-size:15px;line-height:1.6;">${config.message}</p>
+          </td>
+        </tr>
+
+        <!-- ORDER INFO -->
+        <tr>
+          <td style="padding:0 32px 40px;">
+            <table width="100%" style="background:#fafafa;border:1px solid #eaeaea;border-radius:8px;padding:24px;">
+              <tr>
+                <td style="padding-bottom:12px;">
+                  <p style="margin:0;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">Mã đơn hàng</p>
+                  <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#0B1B3D;">#${data.orderCode}</p>
+                </td>
+                <td align="right" style="padding-bottom:12px;">
+                  <p style="margin:0;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">Tổng tiền</p>
+                  <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#0B1B3D;">${data.totalAmount.toLocaleString("vi-VN")}đ</p>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding-top:16px;border-top:1px solid #eaeaea;text-align:center;">
+                  <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/tai-khoan/don-hang" style="display:inline-block;background:#0B1B3D;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:600;font-size:14px;margin-top:8px;">Xem chi tiết đơn hàng</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding:24px 32px;text-align:center;border-top:1px solid #f0f0f0;background:#fafafa;">
+            <p style="color:#aaa;font-size:12px;margin:0;">Nếu bạn có thắc mắc, hãy liên hệ với chúng tôi.</p>
+            <p style="color:#aaa;font-size:12px;margin:8px 0 0;">© 2026 Manna Store — Trang bị đời sống tâm linh.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendOrderStatusEmail(data: OrderStatusEmailData) {
+  try {
+    const transporter = await getTransporter();
+
+    if (!transporter) {
+      console.log("[EMAIL - DEV MODE] Order status email would be sent to:", data.to);
+      console.log("  Order:", data.orderCode, "| Status:", data.status);
+      return { success: true, dev: true };
+    }
+
+    const fromName = "Manna Store";
+    const fromEmail = process.env.EMAIL_USER;
+    const config = STATUS_CONFIG[data.status] || { label: data.status, icon: "" };
+
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to: data.to,
+      subject: `${config.icon} Cập nhật đơn hàng #${data.orderCode}: ${config.label}`,
+      html: buildOrderStatusEmailHtml(data),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[EMAIL ERROR]", error);
+    return { success: false, error: String(error) };
+  }
+}

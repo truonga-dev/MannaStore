@@ -1,13 +1,32 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import ProductCard from "@/components/product/ProductCard";
-import { Filter, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Filter, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-export default function ProductsClient({ initialProducts, dbCategories }: { initialProducts: any[], dbCategories: any[] }) {
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<string>("newest");
+export default function ProductsClient({ 
+  initialProducts, 
+  dbCategories,
+  totalPages,
+  currentPage,
+  initialCategory,
+  initialSort
+}: { 
+  initialProducts: any[], 
+  dbCategories: any[],
+  totalPages: number,
+  currentPage: number,
+  initialCategory: string,
+  initialSort: string
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
+  const [sortOrder, setSortOrder] = useState<string>(initialSort);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isMoreCatOpen, setIsMoreCatOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -15,6 +34,12 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
 
   const categories = [{ id: "all", name: "Tất cả" }, ...dbCategories.map(c => ({ id: c.id, name: c.name, slug: c.slug }))];
   
+  // Sync state with props in case URL changes via back/forward
+  useEffect(() => {
+    setActiveCategory(initialCategory);
+    setSortOrder(initialSort);
+  }, [initialCategory, initialSort]);
+
   useEffect(() => {
     const updateVisible = () => {
       if (!containerRef.current) return;
@@ -35,7 +60,6 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
       setVisibleCount(Math.max(1, count));
     };
     
-    // Small timeout to ensure DOM is fully rendered before measuring
     const timeout = setTimeout(updateVisible, 10);
     window.addEventListener("resize", updateVisible);
     return () => {
@@ -44,34 +68,39 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
     };
   }, [categories]);
 
+  const updateURL = (category: string, sort: string, page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('category', category);
+    params.set('sort', sort);
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCategoryChange = (catId: string) => {
+    setActiveCategory(catId);
+    updateURL(catId, sortOrder, 1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortOrder(sort);
+    updateURL(activeCategory, sort, 1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    updateURL(activeCategory, sortOrder, page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const visibleCategories = categories.slice(0, visibleCount);
   const moreCategories = categories.slice(visibleCount);
   const isMoreActive = moreCategories.some(cat => cat.id === activeCategory);
 
-  const filteredAndSortedProducts = useMemo(() => {
-    let result = [...initialProducts];
-    
-    // Filter
-    if (activeCategory !== "all") {
-      result = result.filter(p => p.categoryId === activeCategory);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      const getPrice = (p: any) => p.variants?.[0]?.price || 0;
-      
-      if (sortOrder === "price-asc") {
-        return getPrice(a) - getPrice(b);
-      } else if (sortOrder === "price-desc") {
-        return getPrice(b) - getPrice(a);
-      } else {
-        // newest
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-
-    return result;
-  }, [initialProducts, activeCategory, sortOrder]);
+  // Generate pagination pages
+  const getPaginationGroup = () => {
+    let start = Math.floor((currentPage - 1) / 5) * 5;
+    return new Array(Math.min(5, totalPages - start)).fill(0).map((_, idx) => start + idx + 1);
+  };
 
   return (
     <div className="bg-[#F8F7F4] dark:bg-[#0C0C0C] min-h-screen pb-20 pt-8">
@@ -95,7 +124,7 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
+                      onClick={() => handleCategoryChange(cat.id)}
                       className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 overflow-hidden shrink-0 ${
                         isActive 
                           ? "text-black bg-white shadow-md scale-105" 
@@ -144,7 +173,7 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
                             <button
                               key={cat.id}
                               onClick={() => {
-                                setActiveCategory(cat.id);
+                                handleCategoryChange(cat.id);
                                 setIsMoreCatOpen(false);
                               }}
                               className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -166,13 +195,6 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
 
             {/* Sort & Count */}
             <div className="flex items-center gap-4 shrink-0 bg-white dark:bg-[#0F172A] p-1.5 rounded-full border border-gray-100 dark:border-transparent relative mt-2 xl:mt-0">
-              <div className="pl-4 hidden sm:flex items-center gap-2 border-r border-gray-100 dark:border-gray-800/50 pr-4">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">Hiển thị</span>
-                <span className="bg-gray-100 dark:bg-[#1E293B] text-gray-900 dark:text-white text-xs font-bold px-2.5 py-1 rounded-md">
-                  {filteredAndSortedProducts.length}
-                </span>
-              </div>
-              
               <div className="relative px-2">
                 <button 
                   onClick={() => setIsSortOpen(!isSortOpen)}
@@ -202,7 +224,7 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
                           <button
                             key={opt.id}
                             onClick={() => {
-                              setSortOrder(opt.id);
+                              handleSortChange(opt.id);
                               setIsSortOpen(false);
                             }}
                             className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -224,8 +246,8 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
         </div>
 
         {/* Product Grid */}
-        <div className="w-full">
-          {filteredAndSortedProducts.length === 0 ? (
+        <div className="w-full mb-12">
+          {initialProducts.length === 0 ? (
             <div className="text-center py-24 bg-white dark:bg-[#0B1320] rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm">
               <p className="text-gray-500 dark:text-gray-400 text-lg">Không tìm thấy sản phẩm nào phù hợp.</p>
             </div>
@@ -235,7 +257,7 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
               className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8"
             >
               <AnimatePresence>
-                {filteredAndSortedProducts.map((product) => (
+                {initialProducts.map((product) => (
                   <motion.div 
                     layout
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -251,6 +273,41 @@ export default function ProductsClient({ initialProducts, dbCategories }: { init
             </motion.div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-[#0F172A] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {getPaginationGroup().map((item) => (
+              <button
+                key={item}
+                onClick={() => handlePageChange(item)}
+                className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                  currentPage === item
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white dark:bg-[#0F172A] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1E293B]"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-[#0F172A] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

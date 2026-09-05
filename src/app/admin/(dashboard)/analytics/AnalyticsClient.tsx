@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Users, MousePointerClick, Eye, RefreshCw, DollarSign, ShoppingCart, TrendingUp } from "lucide-react";
+import { Activity, Users, MousePointerClick, Eye, RefreshCw, DollarSign, ShoppingCart, TrendingUp, MonitorPlay } from "lucide-react";
 import toast from "react-hot-toast";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from "recharts";
 import Image from "next/image";
 
 interface TrafficData {
   activeUsers: number;
-  todayVisits: number;
-  todayUniqueVisitors: number;
-  todayClicks: number;
+  totalVisits: number;
+  uniqueVisitors: number;
+  totalClicks: number;
   topPages: { path: string; count: number }[];
   topActions: { element: string; count: number }[];
+  dailyTraffic: {
+    date: string;
+    visits: number;
+    uniqueVisitors: number;
+  }[];
 }
 
 interface RevenueData {
@@ -34,6 +39,9 @@ interface RevenueData {
   }[];
 }
 
+// Dummy data for sparklines
+const generateSparklineData = () => Array.from({ length: 20 }, () => ({ value: 20 + Math.floor(Math.random() * 40) }));
+
 export default function AnalyticsClient() {
   const [activeTab, setActiveTab] = useState<'revenue' | 'traffic'>('revenue');
   const [days, setDays] = useState(30);
@@ -47,7 +55,7 @@ export default function AnalyticsClient() {
     setIsLoading(true);
     try {
       const [trafficRes, revenueRes] = await Promise.all([
-        fetch("/api/admin/analytics"),
+        fetch(`/api/admin/analytics?days=${days}`),
         fetch(`/api/admin/revenue?days=${days}`)
       ]);
       
@@ -65,21 +73,26 @@ export default function AnalyticsClient() {
     fetchData();
   }, [days]);
 
-  // Traffic refresh
+  // Traffic refresh for active users
   useEffect(() => {
     if (activeTab === 'traffic') {
       const interval = setInterval(async () => {
         try {
-          const res = await fetch("/api/admin/analytics");
+          const res = await fetch(`/api/admin/analytics?days=${days}`);
           if (res.ok) setTrafficData(await res.json());
         } catch (e) {}
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [activeTab]);
+  }, [activeTab, days]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const getMaxCount = (items: {count: number}[]) => {
+    if (!items || items.length === 0) return 1;
+    return Math.max(...items.map(i => i.count));
   };
 
   return (
@@ -87,16 +100,15 @@ export default function AnalyticsClient() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-medium text-gray-100">Thống Kê</h1>
         <div className="flex items-center gap-2">
-          {activeTab === 'revenue' && (
-            <select 
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-              className="bg-[#1E1E1E] text-sm text-gray-200 border border-gray-800 rounded-xl px-3 py-2 outline-none focus:border-primary"
-            >
-              <option value={7}>7 ngày qua</option>
-              <option value={30}>30 ngày qua</option>
-            </select>
-          )}
+          <select 
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="bg-[#1E1E1E] text-sm text-gray-200 border border-gray-800 rounded-xl px-3 py-2 outline-none focus:border-primary"
+          >
+            <option value={1}>Hôm nay</option>
+            <option value={7}>7 ngày qua</option>
+            <option value={30}>30 ngày qua</option>
+          </select>
           <button 
             onClick={fetchData}
             disabled={isLoading}
@@ -297,14 +309,30 @@ export default function AnalyticsClient() {
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Activity size={64} className="text-blue-500" />
               </div>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 relative z-10">
                 <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-xl">
                   <Activity size={20} />
                 </div>
                 <h3 className="font-medium text-gray-400">Đang Online</h3>
               </div>
-              <p className="text-3xl font-bold text-gray-100">{trafficData?.activeUsers || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Khách trong 5 phút qua</p>
+              <p className="text-3xl font-bold text-gray-100 relative z-10">{trafficData?.activeUsers || 0}</p>
+              <p className="text-xs text-gray-500 mt-2 relative z-10">Khách trong 5 phút qua</p>
+              
+              <div className="absolute bottom-0 left-0 w-full h-1/2 opacity-20 pointer-events-none">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={generateSparklineData()}>
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2} 
+                      dot={false} 
+                      isAnimationActive={true}
+                      animationDuration={3000}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-2xl border border-gray-800 relative overflow-hidden group">
@@ -315,10 +343,10 @@ export default function AnalyticsClient() {
                 <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-xl">
                   <Users size={20} />
                 </div>
-                <h3 className="font-medium text-gray-400">Khách Hôm Nay</h3>
+                <h3 className="font-medium text-gray-400">Khách Truy Cập</h3>
               </div>
-              <p className="text-3xl font-bold text-gray-100">{trafficData?.todayUniqueVisitors || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Dựa trên IP (hôm nay)</p>
+              <p className="text-3xl font-bold text-gray-100">{trafficData?.uniqueVisitors || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">IP duy nhất (trong {days} ngày)</p>
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-2xl border border-gray-800 relative overflow-hidden group">
@@ -331,8 +359,8 @@ export default function AnalyticsClient() {
                 </div>
                 <h3 className="font-medium text-gray-400">Lượt Xem Trang</h3>
               </div>
-              <p className="text-3xl font-bold text-gray-100">{trafficData?.todayVisits || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Tổng lượt tải trang (hôm nay)</p>
+              <p className="text-3xl font-bold text-gray-100">{trafficData?.totalVisits || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">Tổng lượt tải trang (trong {days} ngày)</p>
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-2xl border border-gray-800 relative overflow-hidden group">
@@ -345,8 +373,52 @@ export default function AnalyticsClient() {
                 </div>
                 <h3 className="font-medium text-gray-400">Lượt Tương Tác</h3>
               </div>
-              <p className="text-3xl font-bold text-gray-100">{trafficData?.todayClicks || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Tổng lượt click (hôm nay)</p>
+              <p className="text-3xl font-bold text-gray-100">{trafficData?.totalClicks || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">Tổng lượt click (trong {days} ngày)</p>
+            </div>
+          </div>
+
+          <div className="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-6 mb-8 shadow-sm">
+            <h3 className="font-medium text-gray-200 mb-6 flex items-center gap-2">
+              <MonitorPlay size={18} className="text-primary" />
+              Lưu Lượng Truy Cập ({days} ngày)
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trafficData?.dailyTraffic || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <defs>
+                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorUniques" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#888" 
+                    fontSize={12} 
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke="#888" 
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#1E1E1E', borderColor: '#333', borderRadius: '8px' }}
+                    itemStyle={{ color: '#E5E7EB' }}
+                  />
+                  <Legend />
+                  <Area type="monotone" dataKey="visits" name="Lượt xem" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorVisits)" />
+                  <Area type="monotone" dataKey="uniqueVisitors" name="Khách duy nhất" stroke="#10b981" fillOpacity={1} fill="url(#colorUniques)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
@@ -360,17 +432,26 @@ export default function AnalyticsClient() {
               </div>
               <div className="p-5">
                 {!trafficData || trafficData.topPages.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">Chưa có dữ liệu hôm nay</p>
+                  <p className="text-gray-500 text-center py-4">Chưa có dữ liệu</p>
                 ) : (
                   <div className="space-y-4">
-                    {trafficData.topPages.map((page, i) => (
-                      <div key={i} className="flex justify-between items-center">
-                        <span className="text-sm text-gray-300 font-mono truncate mr-4">{page.path}</span>
-                        <span className="text-sm font-medium text-gray-100 bg-gray-800 px-2.5 py-1 rounded-lg">
-                          {page.count} view
-                        </span>
-                      </div>
-                    ))}
+                    {trafficData.topPages.map((page, i) => {
+                      const max = getMaxCount(trafficData.topPages);
+                      const percent = Math.max(5, (page.count / max) * 100);
+                      return (
+                        <div key={i} className="relative">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm text-gray-300 font-mono truncate mr-4 relative z-10">{page.path}</span>
+                            <span className="text-xs font-medium text-gray-300 relative z-10">
+                              {page.count} view
+                            </span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-purple-500/50 rounded-full" style={{ width: `${percent}%` }}></div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -385,17 +466,26 @@ export default function AnalyticsClient() {
               </div>
               <div className="p-5">
                 {!trafficData || trafficData.topActions.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">Chưa có dữ liệu click hôm nay</p>
+                  <p className="text-gray-500 text-center py-4">Chưa có dữ liệu click</p>
                 ) : (
                   <div className="space-y-4">
-                    {trafficData.topActions.map((action, i) => (
-                      <div key={i} className="flex justify-between items-center">
-                        <span className="text-sm text-gray-300 truncate mr-4">{action.element}</span>
-                        <span className="text-sm font-medium text-gray-100 bg-gray-800 px-2.5 py-1 rounded-lg">
-                          {action.count} click
-                        </span>
-                      </div>
-                    ))}
+                    {trafficData.topActions.map((action, i) => {
+                       const max = getMaxCount(trafficData.topActions);
+                       const percent = Math.max(5, (action.count / max) * 100);
+                       return (
+                        <div key={i} className="relative">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm text-gray-300 truncate mr-4 relative z-10">{action.element}</span>
+                            <span className="text-xs font-medium text-gray-300 relative z-10">
+                              {action.count} click
+                            </span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-orange-500/50 rounded-full" style={{ width: `${percent}%` }}></div>
+                          </div>
+                        </div>
+                       )
+                    })}
                   </div>
                 )}
               </div>

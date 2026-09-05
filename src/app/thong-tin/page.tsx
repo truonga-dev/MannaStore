@@ -34,7 +34,8 @@ export default async function ProfilePage() {
         },
         orderBy: {
           createdAt: 'desc'
-        }
+        },
+        take: 20, // Chỉ load 20 đơn hàng gần nhất
       },
       favorites: {
         include: {
@@ -42,12 +43,14 @@ export default async function ProfilePage() {
         },
         orderBy: {
           createdAt: 'desc'
-        }
+        },
+        take: 50, // Giới hạn 50 sản phẩm yêu thích
       },
       pointTransactions: {
         orderBy: {
           createdAt: 'desc'
-        }
+        },
+        take: 30, // 30 giao dịch điểm gần nhất
       }
     }
   });

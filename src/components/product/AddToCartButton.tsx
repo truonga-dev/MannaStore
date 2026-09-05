@@ -42,6 +42,8 @@ export default function AddToCartButton({
   const router = useRouter();
   const { data: session } = useAuthSession();
 
+  const isOutOfStock = selectedVariant && typeof selectedVariant.stockQuantity === 'number' && selectedVariant.stockQuantity <= 0;
+
   const handleAddToCart = () => {
     if (!session) {
       toast.error('Vui lòng đăng nhập để mua hàng');
@@ -50,6 +52,11 @@ export default function AddToCartButton({
     }
 
     if (!selectedVariant) return;
+
+    if (isOutOfStock) {
+      toast.error('Sản phẩm tạm thời hết hàng');
+      return;
+    }
     
     addItem({
       productId,
@@ -59,7 +66,8 @@ export default function AddToCartButton({
       quantity: 1,
       imageUrl: productImageUrl,
       size: selectedVariant.size,
-      color: selectedVariant.color
+      color: selectedVariant.color,
+      maxStock: selectedVariant.stockQuantity ?? null,
     });
     
     toast.success('Đã thêm sản phẩm vào giỏ hàng!', {
@@ -83,6 +91,11 @@ export default function AddToCartButton({
     }
 
     if (!selectedVariant) return;
+
+    if (isOutOfStock) {
+      toast.error('Sản phẩm tạm thời hết hàng');
+      return;
+    }
     
     addItem({
       productId,
@@ -92,7 +105,8 @@ export default function AddToCartButton({
       quantity: 1,
       imageUrl: productImageUrl,
       size: selectedVariant.size,
-      color: selectedVariant.color
+      color: selectedVariant.color,
+      maxStock: selectedVariant.stockQuantity ?? null,
     });
     
     router.push('/thanh-toan');
@@ -155,22 +169,27 @@ export default function AddToCartButton({
             * Phân loại này hiện không có sẵn, vui lòng chọn phân loại khác.
           </div>
         )}
+        {selectedVariant && isOutOfStock && (
+          <div className="mt-4 text-sm text-amber-600 font-medium">
+            * Phân loại này hiện đang tạm hết hàng.
+          </div>
+        )}
       </div>
 
       <div className="flex gap-4">
         <button 
           onClick={handleAddToCart}
-          disabled={!selectedVariant}
+          disabled={!selectedVariant || isOutOfStock}
           className="flex-1 bg-transparent border border-red-600 text-red-600 py-3 font-bold uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-full text-sm"
         >
-          Thêm Vào Giỏ
+          {isOutOfStock ? "Hết Hàng" : "Thêm Vào Giỏ"}
         </button>
         <button 
           onClick={handleBuyNow}
-          disabled={!selectedVariant}
+          disabled={!selectedVariant || isOutOfStock}
           className="flex-1 bg-red-600 text-white py-3 font-bold uppercase tracking-wider hover:bg-red-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 rounded-full shadow-md hover:shadow-lg text-sm"
         >
-          Mua Ngay
+          {isOutOfStock ? "Hết Hàng" : "Mua Ngay"}
         </button>
       </div>
     </>

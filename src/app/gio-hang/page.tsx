@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, CartItem } from "@/store/cartStore";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const { items, updateQuantity, removeItem, totalPrice } = useCartStore();
+
+  const handleIncrease = (item: CartItem) => {
+    if (typeof item.maxStock === "number" && item.maxStock > 0 && item.quantity >= item.maxStock) {
+      toast.error(`Sản phẩm chỉ còn ${item.maxStock} sản phẩm trong kho`);
+      return;
+    }
+    updateQuantity(item.id, item.quantity + 1);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -82,7 +91,7 @@ export default function CartPage() {
                       </button>
                       <span className="w-10 h-8 flex items-center justify-center text-sm bg-white dark:bg-gray-900 border-x-0">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => handleIncrease(item)}
                         className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-l border-gray-300"
                       >
                         <Plus className="w-3 h-3" />

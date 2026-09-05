@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, User, ChevronRight, Tag } from "lucide-react";
 import { SAMPLE_PRODUCTS } from "@/lib/sampleData"; // Suggesting products at the end
 import prisma from "@/lib/prisma";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 // Dynamic SEO metadata based on blog post
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -111,7 +112,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
             prose-strong:text-gray-900 dark:prose-strong:text-white
             [&>.lead]:text-xl [&>.lead]:font-medium [&>.lead]:text-gray-900 dark:[&>.lead]:text-white [&>.lead]:mb-10"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
         
         {/* Tags footer */}

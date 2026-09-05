@@ -7,6 +7,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    // Validate ID format - chỉ cho phép cuid
+    if (!id || typeof id !== 'string' || id.length < 10 || id.length > 30) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
     const order = await prisma.order.findUnique({
       where: { id },
       select: { status: true }

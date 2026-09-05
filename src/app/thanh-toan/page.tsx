@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { MapPin, Ticket, Coins, CreditCard, ChevronRight, CheckCircle2, Truck, MessageSquare, UserCheck } from "lucide-react";
 import Link from "next/link";
 import { TermsModal } from "@/components/auth/TermsModal";
+import { FALLBACK_PROVINCES } from "@/lib/vietnamProvinces";
 
 type UserProfile = {
   name?: string | null;
@@ -34,7 +35,7 @@ export default function CheckoutPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [placedOrderCode, setPlacedOrderCode] = useState("");
 
-  const [provinces, setProvinces] = useState<any[]>([]);
+  const [provinces, setProvinces] = useState<any[]>(FALLBACK_PROVINCES);
   const [districts, setDistricts] = useState<any[]>([]);
   const [wards, setWards] = useState<any[]>([]);
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -49,9 +50,19 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     fetch("https://provinces.open-api.vn/api/p/")
-      .then(r => r.json())
-      .then(data => setProvinces(data))
-      .catch(console.error);
+      .then(r => {
+        if (!r.ok) throw new Error("Network response not ok");
+        return r.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinces(data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch provinces from open-api, using fallback:", err);
+        setProvinces(FALLBACK_PROVINCES);
+      });
       
     getStoreSettings().then(data => {
       setSettings(data);
@@ -291,14 +302,22 @@ export default function CheckoutPage() {
                       <option value="">Tỉnh/Thành phố</option>
                       {provinces.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
                     </select>
-                    <select required value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedWard(""); }} disabled={!selectedProvince} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
-                      <option value="">Quận/Huyện</option>
-                      {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
-                    </select>
-                    <select required value={selectedWard} onChange={e => setSelectedWard(e.target.value)} disabled={!selectedDistrict} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
-                      <option value="">Phường/Xã</option>
-                      {wards.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
-                    </select>
+                    {districts.length > 0 ? (
+                      <select required value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedWard(""); }} disabled={!selectedProvince} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
+                        <option value="">Quận/Huyện</option>
+                        {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
+                      </select>
+                    ) : (
+                      <input required type="text" placeholder="Quận/Huyện" value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedWard(""); }} disabled={!selectedProvince} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all disabled:opacity-50" />
+                    )}
+                    {wards.length > 0 ? (
+                      <select required value={selectedWard} onChange={e => setSelectedWard(e.target.value)} disabled={!selectedDistrict} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50">
+                        <option value="">Phường/Xã</option>
+                        {wards.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
+                      </select>
+                    ) : (
+                      <input required type="text" placeholder="Phường/Xã" value={selectedWard} onChange={e => setSelectedWard(e.target.value)} disabled={!selectedDistrict} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary outline-none transition-all disabled:opacity-50" />
+                    )}
                   </div>
                   <input required name="streetAddress" type="text" value={streetAddress} onChange={e => setStreetAddress(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-none rounded-xl px-4 py-3.5 mt-3 focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="Số nhà, Tên đường..." />
                 </div>

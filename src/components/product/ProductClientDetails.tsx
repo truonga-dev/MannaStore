@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import ProductGallery from "./ProductGallery";
 import AddToCartButton from "./AddToCartButton";
+import ProductReviews from "./ProductReviews";
 
 export default function ProductClientDetails({ 
   product, 
@@ -68,43 +70,48 @@ export default function ProductClientDetails({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-      {/* Product Image */}
-      <ProductGallery 
-        images={images}
-        productName={product.name}
-        productId={product.id}
-        isFavorite={isFavorite}
-        currentIndex={galleryIndex}
-        onIndexChange={setGalleryIndex}
-      />
+    <div className="flex flex-col gap-12 lg:gap-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
+        {/* Product Image */}
+        <ProductGallery 
+          images={images}
+          productName={product.name}
+          productId={product.id}
+          isFavorite={isFavorite}
+          currentIndex={galleryIndex}
+          onIndexChange={setGalleryIndex}
+        />
 
-      {/* Product Info */}
-      <div className="flex flex-col">
-        <div className="mb-8">
-          <h1 className="font-serif text-3xl md:text-5xl font-bold mb-4">{product.name}</h1>
-          <p className="text-2xl font-serif text-primary/80 font-semibold mb-6">
-            {priceDisplay}
-          </p>
-          <div 
-            className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 mb-8"
-            dangerouslySetInnerHTML={{ __html: product.description || "" }}
+        {/* Product Info */}
+        <div className="flex flex-col">
+          <div className="mb-8">
+            <h1 className="font-serif text-3xl md:text-5xl font-bold mb-4">{product.name}</h1>
+            <p className="text-2xl font-serif text-primary/80 font-semibold mb-6">
+              {priceDisplay}
+            </p>
+            <div 
+              className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 mb-8"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description || "") }}
+            />
+          </div>
+
+          <AddToCartButton 
+            productId={product.id}
+            productName={product.name}
+            productImageUrl={images[galleryIndex] || product.imageUrl}
+            uniqueColors={uniqueColors}
+            uniqueSizes={uniqueSizes}
+            selectedColor={selectedColor}
+            selectedSize={selectedSize}
+            onColorSelect={handleColorSelect}
+            onSizeSelect={setSelectedSize}
+            selectedVariant={selectedVariant}
           />
         </div>
-
-        <AddToCartButton 
-          productId={product.id}
-          productName={product.name}
-          productImageUrl={images[galleryIndex] || product.imageUrl}
-          uniqueColors={uniqueColors}
-          uniqueSizes={uniqueSizes}
-          selectedColor={selectedColor}
-          selectedSize={selectedSize}
-          onColorSelect={handleColorSelect}
-          onSizeSelect={setSelectedSize}
-          selectedVariant={selectedVariant}
-        />
       </div>
+
+      {/* Product Reviews */}
+      <ProductReviews productId={product.id} />
     </div>
   );
 }

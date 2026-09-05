@@ -12,6 +12,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Whitelist các loại file được phép upload
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'image/avif',
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.avif',
+]);
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,6 +41,22 @@ export async function POST(req: NextRequest) {
     
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    // Kiểm tra kích thước file
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File quá lớn. Tối đa 10MB.' }, { status: 400 });
+    }
+
+    // Kiểm tra MIME type
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      return NextResponse.json({ error: 'Loại file không được phép. Chỉ chấp nhận ảnh (JPEG, PNG, GIF, WebP, SVG, AVIF).' }, { status: 400 });
+    }
+
+    // Kiểm tra phần mở rộng file
+    const ext = path.extname(file.name).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return NextResponse.json({ error: 'Phần mở rộng file không hợp lệ.' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -51,14 +83,21 @@ export async function POST(req: NextRequest) {
       await fs.mkdir(uploadDir, { recursive: true });
     }
 
+    // Tạo tên file an toàn - không dùng tên file gốc
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.name);
-    const filename = `file-${uniqueSuffix}${ext}`;
-    const filepath = path.join(uploadDir, filename);
+    const safeFilename = `file-${uniqueSuffix}${ext}`;
+    const filepath = path.join(uploadDir, safeFilename);
+
+    // Kiểm tra path traversal - đảm bảo filepath nằm trong uploadDir
+    const resolvedPath = path.resolve(filepath);
+    const resolvedUploadDir = path.resolve(uploadDir);
+    if (!resolvedPath.startsWith(resolvedUploadDir)) {
+      return NextResponse.json({ error: 'Đường dẫn file không hợp lệ.' }, { status: 400 });
+    }
 
     await fs.writeFile(filepath, buffer);
 
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    return NextResponse.json({ url: `/uploads/${safeFilename}` });
   } catch (error) {
     console.error('Upload Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
