@@ -28,6 +28,9 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/mana-store:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/mana-store:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/mana-store:buildcache,mode=max
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DIRECT_URL=${{ secrets.DIRECT_URL }}
 
   deploy-to-vps:
     needs: build-and-push
