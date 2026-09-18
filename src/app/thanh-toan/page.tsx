@@ -372,7 +372,7 @@ export default function CheckoutPage() {
                     <div className="flex-1">
                       <div className="font-bold text-lg mb-1 flex items-center justify-between">
                         Chuyển khoản Ngân Hàng
-                        {paymentMethod === 'SEPAY' && <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Khuyên dùng</span>}
+                        {paymentMethod === 'SEPAY' && <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full uppercase tracking-wider">Khuyên dùng</span>}
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Thanh toán thủ công qua chuyển khoản ngân hàng. Đơn hàng sẽ được xử lý sau khi nhận tiền.</p>
                     </div>
