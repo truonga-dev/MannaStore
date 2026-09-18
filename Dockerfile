@@ -9,7 +9,7 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 RUN npx prisma generate
 
 # Rebuild the source code only when needed
