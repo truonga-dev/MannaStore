@@ -124,7 +124,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <h3 className="text-2xl font-bold font-serif text-gray-900 dark:text-white mb-8 text-center">
             Sản phẩm được gợi ý cho bạn
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {suggestedProducts.map((product) => (
               <Link key={product.id} href={`/san-pham/${product.slug}`} className="group block">
                 <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-800 h-full flex flex-col">

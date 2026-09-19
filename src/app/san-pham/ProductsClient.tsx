@@ -167,7 +167,7 @@ export default function ProductsClient({
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute right-0 md:left-0 top-[44px] w-48 bg-white dark:bg-[#0F172A] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                          className="absolute left-0 top-[44px] w-48 max-w-[90vw] bg-white dark:bg-[#0F172A] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl overflow-hidden z-50 py-1"
                         >
                           {moreCategories.map((cat) => (
                             <button
@@ -214,7 +214,7 @@ export default function ProductsClient({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-full mt-4 w-48 bg-white dark:bg-[#0F172A] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                        className="absolute left-0 top-full mt-4 w-48 max-w-[90vw] bg-white dark:bg-[#0F172A] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl overflow-hidden z-50 py-1"
                       >
                         {[
                           { id: 'newest', label: 'Mới nhất' },
