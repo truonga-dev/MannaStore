@@ -8,6 +8,8 @@ import Providers from "@/components/auth/Providers";
 import MainLayout from "@/components/layout/MainLayout";
 import AnalyticsProvider from "@/components/AnalyticsProvider";
 import PixelEvents from "@/components/PixelEvents";
+import SplashOnboarding from "@/components/SplashOnboarding";
+import CookieConsent from "@/components/CookieConsent";
 
 const inter = Inter({
   subsets: ["vietnamese"],
@@ -38,6 +40,8 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full antialiased scroll-smooth`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-background text-foreground">
+        <SplashOnboarding />
+        <CookieConsent />
         <Providers>
           <AnalyticsProvider>
             <Toaster position="top-center" />

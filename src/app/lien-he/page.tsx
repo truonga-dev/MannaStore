@@ -64,7 +64,7 @@ export default function LienHePage() {
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Email</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Chúng tôi sẽ phản hồi trong 24h</p>
                     <a href="mailto:hello@mannastore.vn" className="font-medium text-[#0B1B3D] dark:text-blue-400 hover:underline">
-                      hello@mannastore.vn
+                      truonga01.dev@gmail.com
                     </a>
                   </div>
                 </div>
@@ -76,8 +76,8 @@ export default function LienHePage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Điện Thoại & Zalo</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Hỗ trợ nhanh chóng</p>
-                    <a href="tel:0123456789" className="font-medium text-[#0B1B3D] dark:text-blue-400 hover:underline">
-                      0123 456 789
+                    <a href="tel:0347084605" className="font-medium text-[#0B1B3D] dark:text-blue-400 hover:underline">
+                      0347084605
                     </a>
                   </div>
                 </div>
@@ -89,7 +89,7 @@ export default function LienHePage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Địa Chỉ</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Văn phòng chính</p>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">TP. Hồ Chí Minh, Việt Nam</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-300">TP. Đà Nẵng, Việt Nam</p>
                   </div>
                 </div>
 
@@ -114,36 +114,36 @@ export default function LienHePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Họ và tên</label>
-                  <input 
-                    type="text" 
-                    id="name" 
+                  <input
+                    type="text"
+                    id="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white" 
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white"
                     placeholder="Tên của bạn"
                     required
                   />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-                  <input 
-                    type="email" 
-                    id="email" 
+                  <input
+                    type="email"
+                    id="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white" 
-                    placeholder="example@email.com"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white"
+                    placeholder="nguyenvana@email.com"
                     required
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Chủ đề</label>
-                <select 
+                <select
                   id="subject"
                   value={formData.subject}
-                  onChange={handleChange} 
+                  onChange={handleChange}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all dark:text-white"
                 >
                   <option>Hỗ trợ đơn hàng</option>
@@ -155,19 +155,19 @@ export default function LienHePage() {
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nội dung</label>
-                <textarea 
-                  id="message" 
+                <textarea
+                  id="message"
                   rows={4}
                   value={formData.message}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none dark:text-white" 
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#0B1B3D] dark:focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none dark:text-white"
                   placeholder="Bạn cần chúng tôi giúp gì?"
                   required
                 ></textarea>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className="w-full py-4 px-6 bg-[#0B1B3D] dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:bg-[#0B1B3D]/90 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
               >

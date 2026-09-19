@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Shirt, Book, Key, Gift, Coffee, Watch, Music, Sparkles, Star, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
-import ProductCard from "@/components/product/ProductCard";
+import dynamic from "next/dynamic";
+
+const ProductCard = dynamic(() => import("@/components/product/ProductCard"), {
+  loading: () => <div className="h-[300px] w-full bg-muted animate-pulse rounded-2xl" />
+});
 import AnnouncementMarquee from "@/components/layout/AnnouncementMarquee";
 import { useState, useEffect, useRef } from "react";
 
