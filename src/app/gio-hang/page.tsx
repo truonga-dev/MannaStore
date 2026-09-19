@@ -31,8 +31,8 @@ export default function CartPage() {
         <h1 className="font-serif text-3xl font-bold mb-4">Giỏ hàng của bạn đang trống</h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">Hãy khám phá các sản phẩm ý nghĩa tại Manna Store nhé.</p>
         <Link
-          href="/danh-muc/thoi-trang"
-          className="bg-primary text-primary-foreground px-8 py-3 font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
+          href="/san-pham"
+          className="bg-primary text-primary-foreground px-8 py-3 font-bold uppercase tracking-wider hover:opacity-90 transition-opacity rounded-md"
         >
           Tiếp tục mua sắm
         </Link>

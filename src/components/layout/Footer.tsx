@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Heart, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const InstagramIcon = ({ size = 16, className = "" }: { size?: number, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -89,6 +90,12 @@ export default function Footer() {
                 {s.icon}
               </a>
             ))}
+          </div>
+
+          {/* Theme Switcher */}
+          <div className="mt-8">
+            <h4 className="text-xs font-bold uppercase tracking-[0.25em] text-white/40 mb-3">Giao diện</h4>
+            <ThemeSwitcher />
           </div>
         </div>
 

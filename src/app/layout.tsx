@@ -10,6 +10,7 @@ import AnalyticsProvider from "@/components/AnalyticsProvider";
 import PixelEvents from "@/components/PixelEvents";
 import SplashOnboarding from "@/components/SplashOnboarding";
 import CookieConsent from "@/components/CookieConsent";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
   subsets: ["vietnamese"],
@@ -39,8 +40,24 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${playfair.variable} h-full antialiased scroll-smooth`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-background text-foreground">
-        <SplashOnboarding />
+        <ThemeProvider>
+          <SplashOnboarding />
         <CookieConsent />
         <Providers>
           <AnalyticsProvider>
@@ -51,6 +68,7 @@ export default function RootLayout({
             <PixelEvents />
           </AnalyticsProvider>
         </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

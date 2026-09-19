@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #F8F7F4;
   --foreground: #0B1B3D;
@@ -17,13 +19,11 @@
   --font-serif: var(--font-playfair);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0C0C0C;
-    --foreground: #F8F7F4;
-    --primary: #F8F7F4;
-    --primary-foreground: #0B1B3D;
-  }
+.dark {
+  --background: #0C0C0C;
+  --foreground: #F8F7F4;
+  --primary: #F8F7F4;
+  --primary-foreground: #0B1B3D;
 }
 
 html {
