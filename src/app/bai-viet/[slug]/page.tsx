@@ -9,55 +9,64 @@ import { sanitizeHtml } from "@/lib/sanitize";
 
 // Dynamic SEO metadata based on blog post
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await prisma.article.findUnique({
-    where: { slug }
-  });
-  
-  if (!post) {
+  try {
+    const { slug } = await params;
+    const post = await prisma.article.findUnique({
+      where: { slug }
+    });
+    
+    if (!post) {
+      return {
+        title: "Không tìm thấy bài viết",
+        description: "Bài viết không tồn tại hoặc đã bị xóa."
+      };
+    }
+
     return {
-      title: "Không tìm thấy bài viết",
-      description: "Bài viết không tồn tại hoặc đã bị xóa."
+      title: `${post.title} | Manna Store`,
+      description: post.excerpt || "",
+      openGraph: {
+        title: post.title,
+        description: post.excerpt || "",
+        images: post.coverImage ? [post.coverImage] : [],
+      }
+    };
+  } catch (error) {
+    console.error("Metadata error:", error);
+    return {
+      title: "Lỗi | Manna Store",
+      description: "Đã xảy ra lỗi khi tải bài viết"
     };
   }
-
-  return {
-    title: `${post.title} | Manna Store`,
-    description: post.excerpt || "",
-    openGraph: {
-      title: post.title,
-      description: post.excerpt || "",
-      images: post.coverImage ? [post.coverImage] : [],
-    }
-  };
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = await prisma.article.findUnique({
-    where: { slug }
-  });
+  try {
+    const { slug } = await params;
+    const post = await prisma.article.findUnique({
+      where: { slug }
+    });
 
-  if (!post) {
-    notFound();
-  }
+    if (!post) {
+      notFound();
+    }
 
-  // Lấy ngẫu nhiên 3 sản phẩm để gợi ý
-  const suggestedProducts = [...SAMPLE_PRODUCTS].sort(() => 0.5 - Math.random()).slice(0, 3);
-  
-  const tags = post.tags ? post.tags.split(',').map(t => t.trim()) : [];
+    // Lấy ngẫu nhiên 3 sản phẩm để gợi ý
+    const suggestedProducts = [...SAMPLE_PRODUCTS].sort(() => 0.5 - Math.random()).slice(0, 3);
+    
+    const tags = post.tags ? post.tags.split(',').map(t => t.trim()) : [];
 
-  return (
-    <div className="bg-[#F8F7F4] dark:bg-[#0C0C0C] min-h-screen py-10 md:py-16">
-      <article className="container mx-auto px-4 max-w-4xl">
-        {/* Breadcrumb */}
-        <nav className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-8 overflow-x-auto whitespace-nowrap">
-          <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
-          <ChevronRight className="w-4 h-4 mx-2" />
-          <Link href="/bai-viet" className="hover:text-primary transition-colors">Bài viết</Link>
-          <ChevronRight className="w-4 h-4 mx-2" />
-          <span className="text-gray-900 dark:text-white font-medium truncate">{post.title}</span>
-        </nav>
+    return (
+      <div className="bg-[#F8F7F4] dark:bg-[#0C0C0C] min-h-screen py-10 md:py-16">
+        <article className="container mx-auto px-4 max-w-4xl">
+          {/* Breadcrumb */}
+          <nav className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-8 overflow-x-auto whitespace-nowrap">
+            <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
+            <ChevronRight className="w-4 h-4 mx-2" />
+            <Link href="/bai-viet" className="hover:text-primary transition-colors">Bài viết</Link>
+            <ChevronRight className="w-4 h-4 mx-2" />
+            <span className="text-gray-900 dark:text-white font-medium truncate">{post.title}</span>
+          </nav>
 
         {/* Header */}
         <header className="mb-10 text-center">
@@ -159,4 +168,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </article>
     </div>
   );
+  } catch (error) {
+    console.error("Blog post render error:", error);
+    // If it fails, throw error so error.tsx can catch it and render the custom error page
+    throw new Error("Cannot load blog post");
+  }
 }
