@@ -1,0 +1,1 @@
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const post = await prisma.article.findUnique({ where: { slug: 'suc-manh-cua-cong-ong-y-nghia-thuc-su-cua-viec-la-mot-giao-hoi' } }); console.log(JSON.stringify(post, null, 2)); } main().finally(() => prisma.$disconnect());

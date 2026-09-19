@@ -94,12 +94,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Featured Image */}
         {post.coverImage && (
           <div className="relative aspect-video w-full rounded-2xl overflow-hidden mb-12 shadow-lg">
-            <Image
+            <img
               src={post.coverImage}
               alt={post.title}
-              fill
-              className="object-cover"
-              priority
+              className="w-full h-full object-cover"
             />
           </div>
         )}
