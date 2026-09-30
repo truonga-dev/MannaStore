@@ -96,7 +96,9 @@ export default function BrandFinalCTA() {
           className="mt-10"
         >
           <a
-            href="/cua-hang"
+            href="https://manna-store-eight.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-[#0B1B3D] text-[#FAF8F5] hover:bg-[#15274d] dark:bg-white dark:text-[#0B1B3D] dark:hover:bg-stone-200 text-sm font-semibold tracking-wider uppercase transition-all duration-300 shadow-[0_15px_35px_rgba(11,27,61,0.25)] hover:shadow-2xl hover:-translate-y-0.5"
           >
             <span>Khám phá Manna Store →</span>

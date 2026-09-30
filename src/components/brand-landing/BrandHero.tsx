@@ -143,7 +143,9 @@ export default function BrandHero() {
             className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto"
           >
             <a
-              href="/cua-hang"
+              href="https://manna-store-eight.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
               data-cursor="Khám phá"
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#0B1B3D] text-[#FAF8F5] hover:bg-[#15274d] dark:bg-white dark:text-[#0B1B3D] dark:hover:bg-stone-200 text-xs uppercase tracking-widest font-semibold transition-all duration-300 shadow-[0_15px_30px_rgba(11,27,61,0.18)] hover:shadow-xl hover:-translate-y-0.5"
             >

@@ -79,10 +79,12 @@ export default function BrandNav() {
           {/* Right CTA Button (Single line, whitespace-nowrap) */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <a
-              href="/cua-hang"
+              href="https://manna-store-eight.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0B1B3D] dark:bg-white text-white dark:text-[#0B1B3D] hover:bg-[#15284d] dark:hover:bg-stone-200 text-xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
             >
-              <span>Khám phá Manna</span>
+              <span>Vào Cửa Hàng</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
 
@@ -121,11 +123,13 @@ export default function BrandNav() {
               ))}
               <div className="pt-3">
                 <a
-                  href="/cua-hang"
+                  href="https://manna-store-eight.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-full bg-[#0B1B3D] text-white font-semibold text-xs uppercase tracking-wider shadow"
                 >
-                  <span>Khám phá Manna</span>
+                  <span>Vào Cửa Hàng Manna</span>
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>

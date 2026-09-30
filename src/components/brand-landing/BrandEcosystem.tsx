@@ -127,12 +127,17 @@ export default function BrandEcosystem() {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-stone-200/50 dark:border-stone-800 flex items-center justify-between text-xs text-[#0B1B3D] dark:text-stone-300 font-medium">
-                  <span className="text-[11px] uppercase tracking-wider text-stone-400">
+                <a
+                  href="https://manna-store-eight.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 pt-4 border-t border-stone-200/50 dark:border-stone-800 flex items-center justify-between text-xs text-[#0B1B3D] dark:text-stone-300 font-medium group/link hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400">
                     Khám phá dòng sản phẩm
                   </span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
+                </a>
               </div>
             </motion.div>
           ))}
