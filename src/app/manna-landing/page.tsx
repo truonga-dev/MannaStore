@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Manna Store — Trang bị đức tin vào từng ngày",
     description:
-      "Christian Lifestyle × Faith × Fashion × Meaning. Khám phá thương hiệu Manna Store.",
-    url: "https://manna-store-eight.vercel.app/",
+      "Christian Lifestyle × Faith × Fashion × Meaning. Khám phá dự án Manna Store.",
+    url: "https://manna-store-eight.vercel.app/manna-landing",
     siteName: "Manna Store",
     images: [
       {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default function MannaLandingPage() {
   return (
     <div className="relative min-h-screen bg-[#FAF8F5] dark:bg-[#0B0F18] text-[#0B1B3D] dark:text-[#F8F7F4] selection:bg-[#0B1B3D] selection:text-white dark:selection:bg-white dark:selection:text-[#0B1B3D] overflow-x-hidden">
       {/* Dynamic Ambient Glassmorphism Lighting Mesh (Glowing Orbs Behind Glass) */}
@@ -68,7 +68,7 @@ export default function Home() {
       {/* Custom Glassmorphism Interactive Cursor */}
       <BrandCursor />
 
-      {/* 1. Minimal Floating Glass Navigation */}
+      {/* 1. Minimal Glass Navigation */}
       <BrandNav />
 
       <main>

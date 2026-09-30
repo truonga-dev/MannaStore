@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 export default function SplashOnboarding() {
+  const pathname = usePathname();
   const [showSplash, setShowSplash] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  if (pathname === '/' || pathname?.includes('landing')) {
+    return null;
+  }
 
   useEffect(() => {
     const hasSeenSplash = sessionStorage.getItem("mana_has_seen_splash");

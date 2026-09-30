@@ -8,13 +8,14 @@ import ZaloChatWidget from "@/components/layout/ZaloChatWidget";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+  const isLanding = pathname === '/' || pathname?.includes('landing');
 
   return (
     <>
-      {!isAdmin && <Header />}
+      {!isAdmin && !isLanding && <Header />}
       <main className="flex-1">{children}</main>
-      {!isAdmin && <Footer />}
-      {!isAdmin && <ZaloChatWidget />}
+      {!isAdmin && !isLanding && <Footer />}
+      {!isAdmin && !isLanding && <ZaloChatWidget />}
     </>
   );
 }
