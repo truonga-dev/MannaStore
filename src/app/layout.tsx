@@ -1,15 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { Toaster } from "react-hot-toast";
-import Providers from "@/components/auth/Providers";
-import MainLayout from "@/components/layout/MainLayout";
-import AnalyticsProvider from "@/components/AnalyticsProvider";
-import PixelEvents from "@/components/PixelEvents";
-import SplashOnboarding from "@/components/SplashOnboarding";
-import CookieConsent from "@/components/CookieConsent";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
@@ -25,8 +16,27 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Manna Store",
-  description: "Cửa hàng sản phẩm Cơ Đốc",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://manna-store-eight.vercel.app"),
+  title: "Manna Store — Trang bị đức tin vào từng ngày",
+  description:
+    "Manna Store — Christian Lifestyle Brand. Khám phá một không gian nơi đức tin, phong cách và những điều có ý nghĩa gặp nhau trong đời sống thường nhật.",
+  openGraph: {
+    title: "Manna Store — Trang bị đức tin vào từng ngày",
+    description:
+      "Christian Lifestyle × Faith × Fashion × Meaning. Khám phá thương hiệu Manna Store.",
+    url: "https://manna-store-eight.vercel.app/",
+    siteName: "Manna Store",
+    images: [
+      {
+        url: "/banners/banner2_v2.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Manna Store Brand Presentation",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -55,19 +65,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-background text-foreground">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col font-sans bg-background text-foreground"
+      >
         <ThemeProvider>
-          <SplashOnboarding />
-        <CookieConsent />
-        <Providers>
-          <AnalyticsProvider>
-            <Toaster position="top-center" />
-            <MainLayout>
-              {children}
-            </MainLayout>
-            <PixelEvents />
-          </AnalyticsProvider>
-        </Providers>
+          {children}
         </ThemeProvider>
       </body>
     </html>
